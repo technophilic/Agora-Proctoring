@@ -363,7 +363,7 @@ export default class RtcEngine {
     //   this.screenClient,
     //   this.remoteStreams,
     // );
-    await this.client.join(
+    this.uid = await this.client.join(
       this.appId,
       channelName,
       token || null,
