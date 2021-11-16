@@ -16,7 +16,7 @@ import {StyleSheet, View} from 'react-native';
 const WhiteboardView: React.FC = () => {
   return (
     <View style={style.flex1}>
-      <iframe height="100%" src="https://www.youtube.com/embed/kd0YGr1iHjs" />
+      <iframe height="100%" src="https://docs.google.com/forms/d/e/1FAIpQLSe7nYsfoCskW9Fow8bpvv6gRirjSwEnGsLEOFPM90dHna4XgQ/viewform" />
     </View>
   );
 };
