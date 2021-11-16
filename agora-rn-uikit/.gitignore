@@ -61,12 +61,3 @@ buck-out/
 
 # CocoaPods
 /ios/Pods/
-
-
-#built website
-dist/
-
-#Electron cache
-.electron/
-.webpack/
-out/
