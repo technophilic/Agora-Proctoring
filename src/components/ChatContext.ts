@@ -31,6 +31,7 @@ interface chatContext {
   sendMessage: (msg: string) => void;
   sendMessageToUid: (msg: string, uid: number) => void;
   sendControlMessage: (msg: string) => void;
+  updateWbUserAttribute: (status: string) => void;
   sendControlMessageToUid: (msg: string, uid: number) => void;
   engine: RtmEngine;
   localUid: string;
@@ -46,6 +47,8 @@ export enum controlMessageEnum {
   kickUser = '5',
   cloudRecordingActive = '6',
   cloudRecordingUnactive = '7',
+  whiteboardStarted = '8',
+  whiteboardStoppped = '9',
 }
 
 const ChatContext = createContext((null as unknown) as chatContext);

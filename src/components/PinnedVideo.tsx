@@ -29,6 +29,9 @@ import icons from '../assets/icons';
 import {layoutProps} from '../../theme.json';
 import FallbackLogo from '../subComponents/FallbackLogo';
 
+import {whiteboardContext} from './WhiteboardConfigure';
+import WhiteboarView from './WhiteboardView';
+
 const {topPinned} = layoutProps;
 
 const PinnedVideo = () => {
@@ -48,6 +51,10 @@ const PinnedVideo = () => {
   };
   const isSidePinnedlayout = topPinned === true ? false : dim[2]; // if either explicity set to false or auto evaluation
   const {userList, localUid} = useContext(chatContext);
+
+  // Whiteboard
+  const {whiteboardActive} = useContext(whiteboardContext);
+
   return (
     <View
       style={{
@@ -55,7 +62,8 @@ const PinnedVideo = () => {
         flex: 1,
         padding: 4,
       }}
-      onLayout={onLayout}>
+      onLayout={onLayout}
+    >
       {isSidePinnedlayout && (
         <Pressable
           onPress={() => setCollapse(!collapse)}
@@ -69,7 +77,8 @@ const PinnedVideo = () => {
             backgroundColor: $config.SECONDARY_FONT_COLOR + 'aa',
             borderRadius: 50,
             justifyContent: 'center',
-          }}>
+          }}
+        >
           {/* <Image
             source={{
               uri: icons.micOff,
@@ -84,7 +93,8 @@ const PinnedVideo = () => {
               color: $config.PRIMARY_COLOR,
               fontWeight: '500',
               fontSize: 20,
-            }}>
+            }}
+          >
             {collapse ? '>' : '<'}
           </Text>
         </Pressable>
@@ -101,84 +111,181 @@ const PinnedVideo = () => {
             isSidePinnedlayout
               ? {width: '20%', paddingHorizontal: 8}
               : {flex: 1}
-          }>
+          }
+        >
           <RtcContext.Consumer>
             {(data) => (
-              <MinUidConsumer>
-                {(minUsers) =>
-                  minUsers.map((user) => (
-                    <Pressable
-                      style={
-                        isSidePinnedlayout
-                          ? {
-                              width: '100%',
-                              height: dim[0] * 0.1125 + 2, // width * 20/100 * 9/16 + 2
-                              zIndex: 40,
-                              paddingBottom: 8,
-                            }
-                          : {
-                              width: ((dim[1] / 3) * 16) / 9 / 2 + 12, //dim[1] /4.3
-                              height: '100%',
-                              zIndex: 40,
-                              paddingRight: 8,
-                              paddingVertical: 4,
-                            }
-                      }
-                      key={user.uid}
-                      onPress={() => {
-                        data.dispatch({type: 'SwapVideo', value: [user]});
-                      }}>
-                      <View style={style.flex1}>
-                        <MaxVideoView
-                          fallback={() => {
-                            if (user.uid === 'local') {
-                              return FallbackLogo(userList[localUid]?.name);
-                            } else if (String(user.uid)[0] === '1') {
-                              return FallbackLogo(
-                                'PSTN User'
-                              );
-                            } else {
-                              return FallbackLogo(
-                                userList[user.uid]?.name,
-                              );
-                            }
-                          }}
-                          user={user}
-                          key={user.uid}
-                        />
-                        <View style={style.nameHolder}>
-                          <View style={[style.MicBackdrop]}>
-                            <Image
-                              source={{
-                                uri: user.audio ? icons.mic : icons.micOff,
-                              }}
-                              style={[
-                                style.MicIcon,
-                                {
-                                  tintColor: user.audio ? primaryColor : 'red',
-                                },
-                              ]}
-                              resizeMode={'contain'}
-                            />
-                          </View>
-                          <Text style={style.name}>
-                            {user.uid === 'local'
-                              ? userList[localUid]
-                                ? userList[localUid].name.slice(0, 20) + ' '
-                                : 'You '
-                              : userList[user.uid]
+              <>
+                <MinUidConsumer>
+                  {(minUsers) =>
+                    minUsers.map((user) => (
+                      <Pressable
+                        style={
+                          isSidePinnedlayout
+                            ? {
+                                width: '100%',
+                                height: dim[0] * 0.1125 + 2, // width * 20/100 * 9/16 + 2
+                                zIndex: 40,
+                                paddingBottom: 8,
+                              }
+                            : {
+                                width: ((dim[1] / 3) * 16) / 9 / 2 + 12, //dim[1] /4.3
+                                height: '100%',
+                                zIndex: 40,
+                                paddingRight: 8,
+                                paddingVertical: 4,
+                              }
+                        }
+                        key={user.uid}
+                        onPress={() => {
+                          if (!whiteboardActive)
+                            data.dispatch({type: 'SwapVideo', value: [user]});
+                        }}
+                      >
+                        <View style={style.flex1}>
+                          <MaxVideoView
+                            fallback={() => {
+                              if (user.uid === 'local') {
+                                return FallbackLogo(userList[localUid]?.name);
+                              } else if (String(user.uid)[0] === '1') {
+                                return FallbackLogo('PSTN User');
+                              } else {
+                                return FallbackLogo(userList[user.uid]?.name);
+                              }
+                            }}
+                            user={user}
+                            key={user.uid}
+                          />
+                          <View style={style.nameHolder}>
+                            <View style={[style.MicBackdrop]}>
+                              <Image
+                                source={{
+                                  uri: user.audio ? icons.mic : icons.micOff,
+                                }}
+                                style={[
+                                  style.MicIcon,
+                                  {
+                                    tintColor: user.audio
+                                      ? primaryColor
+                                      : 'red',
+                                  },
+                                ]}
+                                resizeMode={'contain'}
+                              />
+                            </View>
+                            <Text style={style.name}>
+                              {user.uid === 'local'
+                                ? userList[localUid]
+                                  ? userList[localUid].name.slice(0, 20) + ' '
+                                  : 'You '
+                                : userList[user.uid]
                                 ? userList[user.uid].name.slice(0, 20) + ' '
                                 : user.uid === 1
-                                  ? (userList[localUid]?.name + "'s screen ").slice(0, 20)
-                                  : String(user.uid)[0] === '1' ?
-                                    'PSTN User ' : 'User '}
-                          </Text>
+                                ? (
+                                    userList[localUid]?.name + "'s screen "
+                                  ).slice(0, 20)
+                                : String(user.uid)[0] === '1'
+                                ? 'PSTN User '
+                                : 'User '}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                    </Pressable>
-                  ))
+                      </Pressable>
+                    ))
+                  }
+                </MinUidConsumer>
+                {
+                  // Whiteboard: Add maximized user to the side scrollable 
+                  // view and replace with whiteboardView
+                  whiteboardActive && (
+                    <MaxUidConsumer>
+                      {(maxUsers) => {
+                        const user = maxUsers[0];
+                        return (
+                          <Pressable
+                            style={
+                              isSidePinnedlayout
+                                ? {
+                                    width: '100%',
+                                    height: dim[0] * 0.1125 + 2, // width * 20/100 * 9/16 + 2
+                                    zIndex: 40,
+                                    paddingBottom: 8,
+                                  }
+                                : {
+                                    width: ((dim[1] / 3) * 16) / 9 / 2 + 12, //dim[1] /4.3
+                                    height: '100%',
+                                    zIndex: 40,
+                                    paddingRight: 8,
+                                    paddingVertical: 4,
+                                  }
+                            }
+                            key={user.uid}
+                            onPress={() => {
+                              // data.dispatch({type: 'SwapVideo', value: [user]});
+                            }}
+                          >
+                            <View style={style.flex1}>
+                              <MaxVideoView
+                                fallback={() => {
+                                  if (user.uid === 'local') {
+                                    return FallbackLogo(
+                                      userList[localUid]?.name,
+                                    );
+                                  } else if (String(user.uid)[0] === '1') {
+                                    return FallbackLogo('PSTN User');
+                                  } else {
+                                    return FallbackLogo(
+                                      userList[user.uid]?.name,
+                                    );
+                                  }
+                                }}
+                                user={user}
+                                key={user.uid}
+                              />
+                              <View style={style.nameHolder}>
+                                <View style={[style.MicBackdrop]}>
+                                  <Image
+                                    source={{
+                                      uri: user.audio
+                                        ? icons.mic
+                                        : icons.micOff,
+                                    }}
+                                    style={[
+                                      style.MicIcon,
+                                      {
+                                        tintColor: user.audio
+                                          ? primaryColor
+                                          : 'red',
+                                      },
+                                    ]}
+                                    resizeMode={'contain'}
+                                  />
+                                </View>
+                                <Text style={style.name}>
+                                  {user.uid === 'local'
+                                    ? userList[localUid]
+                                      ? userList[localUid].name.slice(0, 20) +
+                                        ' '
+                                      : 'You '
+                                    : userList[user.uid]
+                                    ? userList[user.uid].name.slice(0, 20) + ' '
+                                    : user.uid === 1
+                                    ? (
+                                        userList[localUid]?.name + "'s screen "
+                                      ).slice(0, 20)
+                                    : String(user.uid)[0] === '1'
+                                    ? 'PSTN User '
+                                    : 'User '}
+                                </Text>
+                              </View>
+                            </View>
+                          </Pressable>
+                        );
+                      }}
+                    </MaxUidConsumer>
+                  )
                 }
-              </MinUidConsumer>
+              </>
             )}
           </RtcContext.Consumer>
         </ScrollView>
@@ -190,53 +297,58 @@ const PinnedVideo = () => {
               ? style.width100
               : style.width80
             : style.flex4
-        }>
-        <MaxUidConsumer>
-          {(maxUsers) => (
-            <View style={style.flex1}>
-              <MaxVideoView
-                fallback={() => {
-                  if (maxUsers[0].uid === 'local') {
-                    return FallbackLogo(userList[localUid]?.name);
-                  } else if (String(maxUsers[0].uid)[0] === '1') {
-                    return FallbackLogo('PSTN User');
-                  } else {
-                    return FallbackLogo(userList[maxUsers[0].uid]?.name);
-                  }
-                }}
-                user={maxUsers[0]}
-                key={maxUsers[0].uid}
-              />
-              <View style={style.nameHolder}>
-                <View style={[style.MicBackdrop]}>
-                  <Image
-                    source={{
-                      uri: maxUsers[0].audio ? icons.mic : icons.micOff,
-                    }}
-                    style={[
-                      style.MicIcon,
-                      {
-                        tintColor: maxUsers[0].audio ? primaryColor : 'red',
-                      },
-                    ]}
-                    resizeMode={'contain'}
-                  />
+        }
+      >
+        {whiteboardActive ? (
+          <WhiteboarView showToolbox />
+        ) : (
+          <MaxUidConsumer>
+            {(maxUsers) => (
+              <View style={style.flex1}>
+                <MaxVideoView
+                  fallback={() => {
+                    if (maxUsers[0].uid === 'local') {
+                      return FallbackLogo(userList[localUid]?.name);
+                    } else if (String(maxUsers[0].uid)[0] === '1') {
+                      return FallbackLogo('PSTN User');
+                    } else {
+                      return FallbackLogo(userList[maxUsers[0].uid]?.name);
+                    }
+                  }}
+                  user={maxUsers[0]}
+                  key={maxUsers[0].uid}
+                />
+                <View style={style.nameHolder}>
+                  <View style={[style.MicBackdrop]}>
+                    <Image
+                      source={{
+                        uri: maxUsers[0].audio ? icons.mic : icons.micOff,
+                      }}
+                      style={[
+                        style.MicIcon,
+                        {
+                          tintColor: maxUsers[0].audio ? primaryColor : 'red',
+                        },
+                      ]}
+                      resizeMode={'contain'}
+                    />
+                  </View>
+                  <Text style={style.name}>
+                    {maxUsers[0].uid === 'local'
+                      ? userList[localUid]
+                        ? userList[localUid].name.slice(0, 20) + ' '
+                        : 'You '
+                      : userList[maxUsers[0].uid]
+                      ? userList[maxUsers[0].uid].name.slice(0, 20) + ' '
+                      : maxUsers[0].uid === 1
+                      ? (userList[localUid].name + "'s screen ").slice(0, 20)
+                      : 'User '}
+                  </Text>
                 </View>
-                <Text style={style.name}>
-                  {maxUsers[0].uid === 'local'
-                    ? userList[localUid]
-                      ? userList[localUid].name.slice(0,20) + ' '
-                      : 'You '
-                    : userList[maxUsers[0].uid]
-                    ? userList[maxUsers[0].uid].name.slice(0,20) + ' '
-                    : maxUsers[0].uid === 1
-                    ? (userList[localUid].name + "'s screen ").slice(0,20)
-                    : 'User '}
-                </Text>
               </View>
-            </View>
-          )}
-        </MaxUidConsumer>
+            )}
+          </MaxUidConsumer>
+        )}
       </View>
     </View>
   );
@@ -273,6 +385,13 @@ const style = StyleSheet.create({
     width: '80%',
     height: '80%',
     alignSelf: 'center',
+  },
+  WhiteBoardContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'white',
+    border: `2px solid ${$config.PRIMARY_COLOR}`,
+    borderRadius: '10px',
   },
 });
 

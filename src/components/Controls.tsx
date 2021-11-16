@@ -10,13 +10,7 @@
 *********************************************
 */
 import React, {useState, useContext, useEffect} from 'react';
-import {
-  View,
-  Dimensions,
-  Platform,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import {View, Dimensions, Platform, StyleSheet, Text} from 'react-native';
 import LocalUserContext from '../../agora-rn-uikit/src/LocalUserContext';
 import {
   LocalAudioMute,
@@ -32,6 +26,7 @@ import ScreenshareButton from '../subComponents/ScreenshareButton';
 // import {SidePanelType} from '../subComponents/SidePanelEnum';
 import {controlsHolder} from '../../theme.json';
 import mobileAndTabletCheck from '../utils/mobileWebTest';
+import WhiteboardButton from '../subComponents/WhiteboardButton';
 
 const Controls = (props: any) => {
   let onLayout = (e: any) => {
@@ -66,7 +61,10 @@ const Controls = (props: any) => {
       <View
         style={[
           style.controlsHolder,
-          {paddingHorizontal: isDesktop ? '25%' : '1%', backgroundColor: $config.SECONDARY_FONT_COLOR + 80},
+          {
+            paddingHorizontal: isDesktop ? '25%' : '1%',
+            backgroundColor: $config.SECONDARY_FONT_COLOR + 80,
+          },
         ]}
         onLayout={onLayout}>
         <View style={{alignSelf: 'center'}}>
@@ -92,9 +90,9 @@ const Controls = (props: any) => {
           </Text> */}
         </View>
         {mobileAndTabletCheck() ? (
-        <View style={{alignSelf: 'center'}}>
-          <SwitchCamera />
-          {/* <Text
+          <View style={{alignSelf: 'center'}}>
+            <SwitchCamera />
+            {/* <Text
             style={{
               textAlign: 'center',
               marginTop: 5,
@@ -102,8 +100,17 @@ const Controls = (props: any) => {
             }}>
             Switch
           </Text> */}
-        </View>
-        ) : (<></>)}
+          </View>
+        ) : (
+          <></>
+        )}
+        {!mobileAndTabletCheck() && isHost ? (
+          <View style={{alignSelf: 'center'}}>
+            <WhiteboardButton setLayout={setLayout} />
+          </View>
+        ) : (
+          <></>
+        )}
         {$config.SCREEN_SHARING ? (
           !mobileAndTabletCheck() ? (
             <View style={{alignSelf: 'center'}}>

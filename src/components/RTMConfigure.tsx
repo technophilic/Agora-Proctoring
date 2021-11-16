@@ -17,6 +17,7 @@ import RtcContext from '../../agora-rn-uikit/src/RtcContext';
 import {messageStoreInterface} from './ChatContext';
 import {Platform} from 'react-native';
 import {backOff} from 'exponential-backoff';
+import {whiteboardContext} from './WhiteboardConfigure';
 
 export enum mType {
   Control = '0',
@@ -34,6 +35,8 @@ const RtmConfigure = (props: any) => {
   const {dispatch} = useContext(RtcContext);
   const [messageStore, setMessageStore] = useState<messageStoreInterface[]>([]);
   const [privateMessageStore, setPrivateMessageStore] = useState({});
+  const {whiteboardActive, joinWhiteboardRoom, leaveWhiteboardRoom} =
+    useContext(whiteboardContext);
   const [login, setLogin] = useState<boolean>(false);
   const [userList, setUserList] = useState({});
   let engine = useRef<RtmEngine>(null!);
@@ -205,6 +208,12 @@ const RtmConfigure = (props: any) => {
             text.slice(1) === controlMessageEnum.cloudRecordingUnactive
           ) {
             setRecordingActive(false);
+          } else if (text.slice(1) === controlMessageEnum.whiteboardStarted) {
+            // Whiteboard: Join room when Whiteboard started message received
+            joinWhiteboardRoom();
+          } else if (text.slice(1) === controlMessageEnum.whiteboardStoppped) {
+            // Whiteboard: Leave room when Whiteboard stopped message received
+            leaveWhiteboardRoom();
           }
         } else if (text[0] === mType.Normal) {
           addMessageToStore(uid, text, ts);
@@ -252,6 +261,11 @@ const RtmConfigure = (props: any) => {
             // let arr = new Int32Array(1);
             // arr[0] = parseInt(data.uid);
             setUserList((prevState) => {
+              console.log('User ATTRIB:' + attr.attributes.whiteboardRoom);
+              if (attr?.attributes?.whiteboardRoom === 'active') {
+                console.log('WHITERTM:' + attr.attributes.whiteboardRoom + attr.attributes.name);
+                joinWhiteboardRoom();
+              }
               return {
                 ...prevState,
                 [member.uid]: {
@@ -310,6 +324,16 @@ const RtmConfigure = (props: any) => {
       mType.Control + msg,
     );
   };
+
+  // Whiteboard: RTM Method to add the whiteboard state to existing local user attributes 
+  const updateWbUserAttribute = async (whiteboardState: string) => {
+    (engine.current as RtmEngine).setLocalUserAttributes([
+      {key: 'name', value: name || 'User'},
+      {key: 'screenUid', value: String(rtcProps.screenShareUid)},
+      {key: 'whiteboardRoom', value: whiteboardState},
+    ]);
+  };
+
   const sendControlMessageToUid = async (msg: string, uid: number) => {
     let adjustedUID = uid;
     if (adjustedUID < 0) {
@@ -344,13 +368,15 @@ const RtmConfigure = (props: any) => {
         messageStore,
         privateMessageStore,
         sendControlMessage,
+        updateWbUserAttribute,
         sendControlMessageToUid,
         sendMessage,
         sendMessageToUid,
         engine: engine.current,
         localUid: localUid.current,
         userList: userList,
-      }}>
+      }}
+    >
       {login ? props.children : <></>}
     </ChatContext.Provider>
   );

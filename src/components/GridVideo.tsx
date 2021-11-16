@@ -9,7 +9,7 @@
  information visit https://appbuilder.agora.io. 
 *********************************************
 */
-import React, {useMemo, useContext, useState} from 'react';
+import React, {useMemo, useContext, useState, useEffect} from 'react';
 import {
   View,
   Platform,
@@ -28,7 +28,13 @@ import styles from './styles';
 import ColorContext from './ColorContext';
 import FallbackLogo from '../subComponents/FallbackLogo';
 import Layout from '../subComponents/LayoutEnum';
-import RtcContext, {DispatchType} from '../../agora-rn-uikit/src/RtcContext';
+import RtcContext, {
+  DispatchType,
+  UidInterface,
+} from '../../agora-rn-uikit/src/RtcContext';
+import WhiteboardView from './WhiteboardView';
+import {whiteboardContext} from './WhiteboardConfigure';
+import {RoomPhase} from 'white-web-sdk';
 
 const layout = (len: number, isDesktop: boolean = true) => {
   const rows = Math.round(Math.sqrt(len));
@@ -58,9 +64,20 @@ const GridVideo = (props: GridVideoProps) => {
   const {dispatch} = useContext(RtcContext);
   const max = useContext(MaxUidContext);
   const min = useContext(MinUidContext);
+
+  const {whiteboardActive} = useContext(whiteboardContext);
+  const wb: UidInterface = {
+    uid: 'whiteboard',
+    audio: false,
+    video: false,
+    streamType: 'high',
+  };
+
   const {primaryColor} = useContext(ColorContext);
   const {userList, localUid} = useContext(chatContext);
-  const users = [...max, ...min];
+  // Whiteboard: Add an extra user with uid as whiteboard to intercept 
+  // later and replace with whiteboardView
+  const users = [...max, ...min, wb];
   let onLayout = (e: any) => {
     setDim([e.nativeEvent.layout.width, e.nativeEvent.layout.height]);
   };
@@ -71,121 +88,155 @@ const GridVideo = (props: GridVideoProps) => {
   ]);
   const isDesktop = dim[0] > dim[1] + 100;
   let {matrix, dims} = useMemo(
-    () => layout(users.length, isDesktop),
-    [users.length, isDesktop],
+    // Whiteboard: Only iterate over n-1 elements when whiteboard not
+    // active since last element is always whiteboard placeholder
+    () => layout(whiteboardActive ? users.length : users.length - 1, isDesktop),
+    [users.length, isDesktop, whiteboardActive],
   );
+
   return (
     <View
       style={[style.full, {paddingHorizontal: isDesktop ? 50 : 0}]}
-      onLayout={onLayout}>
+      onLayout={onLayout}
+    >
       {matrix.map((r, ridx) => (
         <View style={style.gridRow} key={ridx}>
-          {r.map((c, cidx) => (
-            <Pressable
-              onPress={() => {
-                if (!(ridx === 0 && cidx === 0)) {
-                  dispatch({
-                    type: 'SwapVideo',
-                    value: [users[ridx * dims.c + cidx]],
-                  });
-                }
-                props.setLayout(Layout.Pinned);
-              }}
-              style={{
-                flex: Platform.OS === 'web' ? 1 / dims.c : 1,
-                marginHorizontal: 'auto',
-              }}
-              key={cidx}>
-              <View style={style.gridVideoContainerInner}>
-                <MaxVideoView
-                  fallback={() => {
-                    if (users[ridx * dims.c + cidx].uid === 'local') {
-                      return FallbackLogo(userList[localUid]?.name);
-                    } else if (String(users[ridx * dims.c + cidx].uid)[0] === '1') {
-                      return FallbackLogo('PSTN User');
-                    } else {
-                      return FallbackLogo(
-                        userList[users[ridx * dims.c + cidx]?.uid]?.name,
-                      );
-                    }
+          {r.map((c, cidx) => {
+            return users[ridx * dims.c + cidx].uid === 'whiteboard' ? (
+              whiteboardActive && (
+                <Pressable
+                  onPress={() => {
+                    props.setLayout(Layout.Pinned);
                   }}
-                  user={users[ridx * dims.c + cidx]}
-                  key={users[ridx * dims.c + cidx].uid}
-                />
-                <View
                   style={{
-                    marginTop: -30,
-                    backgroundColor: $config.SECONDARY_FONT_COLOR + 'bb',
-                    alignSelf: 'flex-end',
-                    paddingHorizontal: 8,
-                    height: 30,
-                    borderTopLeftRadius: 15,
-                    borderBottomRightRadius: 15,
-                    // marginHorizontal: 'auto',
-                    maxWidth: '100%',
-                    flexDirection: 'row',
-                    // alignContent: 'flex-end',
-                    // width: '100%',
-                    // alignItems: 'flex-start',
-                  }}>
-                  {/* <View style={{alignSelf: 'flex-end', flexDirection: 'row'}}> */}
-                  <View style={[style.MicBackdrop]}>
-                    <Image
-                      source={{
-                        uri: users[ridx * dims.c + cidx].audio
-                          ? icons.mic
-                          : icons.micOff,
-                      }}
-                      style={[
-                        style.MicIcon,
-                        {
-                          tintColor: users[ridx * dims.c + cidx].audio
-                            ? primaryColor
-                            : 'red',
-                        },
-                      ]}
-                      resizeMode={'contain'}
-                    />
+                    flex: Platform.OS === 'web' ? 1 / dims.c : 1,
+                    marginHorizontal: 'auto',
+                  }}
+                  key={cidx}
+                >
+                  <View style={style.gridVideoContainerInner}>
+                    <WhiteboardView />
                   </View>
-                  <Text
-                    textBreakStrategy={'simple'}
+                </Pressable>
+              )
+            ) : (
+              <Pressable
+                onPress={() => {
+                  if (!(ridx === 0 && cidx === 0)) {
+                    dispatch({
+                      type: 'SwapVideo',
+                      value: [users[ridx * dims.c + cidx]],
+                    });
+                  }
+                  props.setLayout(Layout.Pinned);
+                }}
+                style={{
+                  flex: Platform.OS === 'web' ? 1 / dims.c : 1,
+                  marginHorizontal: 'auto',
+                }}
+                key={cidx}
+              >
+                <View style={style.gridVideoContainerInner}>
+                  <MaxVideoView
+                    fallback={() => {
+                      if (users[ridx * dims.c + cidx].uid === 'local') {
+                        return FallbackLogo(userList[localUid]?.name);
+                      } else if (
+                        String(users[ridx * dims.c + cidx].uid)[0] === '1'
+                      ) {
+                        return FallbackLogo('PSTN User');
+                      } else {
+                        return FallbackLogo(
+                          userList[users[ridx * dims.c + cidx]?.uid]?.name,
+                        );
+                      }
+                    }}
+                    user={users[ridx * dims.c + cidx]}
+                    key={users[ridx * dims.c + cidx].uid}
+                  />
+                  <View
                     style={{
-                      color: $config.PRIMARY_FONT_COLOR,
-                      lineHeight: 30,
-                      fontSize: 18,
-                      fontWeight: '600',
+                      marginTop: -30,
+                      backgroundColor: $config.SECONDARY_FONT_COLOR + 'bb',
+                      alignSelf: 'flex-end',
+                      paddingHorizontal: 8,
+                      height: 30,
+                      borderTopLeftRadius: 15,
+                      borderBottomRightRadius: 15,
+                      // marginHorizontal: 'auto',
+                      maxWidth: '100%',
+                      flexDirection: 'row',
+                      // alignContent: 'flex-end',
                       // width: '100%',
-                      // alignSelf: 'stretch',
-                      // textAlign: 'center',
-                    }}>
-                    {users[ridx * dims.c + cidx].uid === 'local'
-                      ? userList[localUid]
-                        ? userList[localUid].name.slice(0, 20) + ' '
-                        : 'You '
-                      : userList[users[ridx * dims.c + cidx].uid]
+                      // alignItems: 'flex-start',
+                    }}
+                  >
+                    {/* <View style={{alignSelf: 'flex-end', flexDirection: 'row'}}> */}
+                    <View style={[style.MicBackdrop]}>
+                      <Image
+                        source={{
+                          uri: users[ridx * dims.c + cidx].audio
+                            ? icons.mic
+                            : icons.micOff,
+                        }}
+                        style={[
+                          style.MicIcon,
+                          {
+                            tintColor: users[ridx * dims.c + cidx].audio
+                              ? primaryColor
+                              : 'red',
+                          },
+                        ]}
+                        resizeMode={'contain'}
+                      />
+                    </View>
+                    <Text
+                      textBreakStrategy={'simple'}
+                      style={{
+                        color: $config.PRIMARY_FONT_COLOR,
+                        lineHeight: 30,
+                        fontSize: 18,
+                        fontWeight: '600',
+                        // width: '100%',
+                        // alignSelf: 'stretch',
+                        // textAlign: 'center',
+                      }}
+                    >
+                      {users[ridx * dims.c + cidx].uid === 'local'
+                        ? userList[localUid]
+                          ? userList[localUid].name.slice(0, 20) + ' '
+                          : 'You '
+                        : userList[users[ridx * dims.c + cidx].uid]
                         ? userList[users[ridx * dims.c + cidx].uid].name.slice(
-                          0,
-                          20,
-                        ) + ' '
+                            0,
+                            20,
+                          ) + ' '
                         : users[ridx * dims.c + cidx].uid === 1
-                          ? (userList[localUid]?.name + "'s screen ").slice(0, 20)
-                          : String(users[ridx * dims.c + cidx].uid)[0] === '1' ?
-                            'PSTN User ' : 'User '}
-                  </Text>
-                  {/* </View> */}
-                  {/* {console.log(
+                        ? (userList[localUid]?.name + "'s screen ").slice(0, 20)
+                        : String(users[ridx * dims.c + cidx].uid)[0] === '1'
+                        ? 'PSTN User '
+                        : 'User '}
+                    </Text>
+                    {/* </View> */}
+                    {/* {console.log(
                     '!nax',
                     userList,
                     userList[users[ridx * dims.c + cidx].uid],
                     userList[localUid],
                     users[ridx * dims.c + cidx].uid,
                   )} */}
+                  </View>
                 </View>
-              </View>
-            </Pressable>
-          ))}
+              </Pressable>
+            );
+          })}
         </View>
       ))}
+      {false && (
+        <View style={style.gridRow} key={'ridx2'}>
+          <WhiteboardView />
+        </View>
+      )}
     </View>
   );
 };
