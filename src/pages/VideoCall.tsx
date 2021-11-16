@@ -214,7 +214,7 @@ const VideoCall: React.FC = () => {
   const [teacher, students] = useChannelInfo();
   // const {phrase} = useParams();
 
-  console.log('[teacher, students]', [teacher, students]);
+  // console.log('[teacher, students]', [teacher, students]);
   // console.log('[params]', params);
   // console.log('[Role]', Role[role]);
 
@@ -223,7 +223,7 @@ const VideoCall: React.FC = () => {
   let title = '';
   let rtcProps = {
     appId: $config.APP_ID,
-    channel: role === Role.Teacher ? teacher : students[0],
+    channel: role === Role.Teacher ? teacher : `${teacher}_${students[0]}`,
     uid: null,
     token: null,
     rtm: null,

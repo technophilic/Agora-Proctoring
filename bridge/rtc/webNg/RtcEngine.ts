@@ -30,6 +30,7 @@ import type {
 } from 'react-native-agora/lib/typescript/src/common/RtcEvents';
 import {VideoProfile} from '../quality';
 import {Role} from './Types';
+import setupListeners from './subscriptions';
 
 interface MediaDeviceInfo {
   readonly deviceId: string;
@@ -162,7 +163,7 @@ export default class RtcEngine {
   // public multiChannelremoteStreams = new Map<UID, RemoteStream>();
   // public streamSpec: AgoraRTC.StreamSpec;
   // public streamSpecScreenshare: ScreenVideoTrackInitConfig;
-  private inScreenshare: Boolean = false;
+  private inScreenshare: boolean = false;
   // private removeStream = (uid: UID) => {
 
   // };
@@ -213,6 +214,13 @@ export default class RtcEngine {
       const student = urlParams.get('student');
       if (student) {
         this.students[0] = student;
+        this.clientMap.set(
+          this.teacher,
+          AgoraRTC.createClient({
+            codec: 'vp8',
+            mode: 'rtc',
+          }),
+        );
       }
     }
   }
@@ -304,116 +312,54 @@ export default class RtcEngine {
     optionalInfo: string,
     optionalUid: number,
   ): Promise<void> {
-    this.client.on('user-joined', (user) => {
-      const uid = this.inScreenshare
-        ? user.uid !== this.screenClient.uid
-          ? user.uid
-          : 1
-        : user.uid;
-      (this.eventsMap.get('UserJoined') as callbackType)(uid);
-      (this.eventsMap.get('RemoteVideoStateChanged') as callbackType)(
-        uid,
-        0,
-        0,
-        0,
-      );
-      (this.eventsMap.get('RemoteAudioStateChanged') as callbackType)(
-        uid,
-        0,
-        0,
-        0,
-      );
-    });
-
-    this.client.on('user-left', (user) => {
-      const uid = this.inScreenshare
-        ? user.uid !== this.screenClient.uid
-          ? user.uid
-          : 1
-        : user.uid;
-
-      // if (uid ===1) {
-      //   this.screenStream.audio?.close();
-      //   this.screenStream.video?.close();
-      //   this.screenStream = {}
-      // }
-      // else
-      if (this.remoteStreams.has(uid)) {
-        this.remoteStreams.delete(uid);
-      }
-      (this.eventsMap.get('UserOffline') as callbackType)(uid);
-      // (this.eventsMap.get('UserJoined') as callbackType)(uid);
-    });
-    this.client.on('user-published', async (user, mediaType) => {
-      // Initiate the subscription
-      if (this.inScreenshare && user.uid === this.screenClient.uid) {
-        (this.eventsMap.get('RemoteVideoStateChanged') as callbackType)(
-          1,
-          2,
-          0,
-          0,
-        );
-      } else {
-        await this.client.subscribe(user, mediaType);
-      }
-
-      // If the subscribed track is an audio track
-      if (mediaType === 'audio') {
-        const audioTrack = user.audioTrack;
-        // Play the audio
-        audioTrack?.play();
-        this.remoteStreams.set(user.uid, {
-          ...this.remoteStreams.get(user.uid),
-          audio: audioTrack,
-        });
-        (this.eventsMap.get('RemoteAudioStateChanged') as callbackType)(
-          user.uid,
-          2,
-          0,
-          0,
-        );
-      } else {
-        const videoTrack = user.videoTrack;
-        // Play the video
-        // videoTrack.play(DOM_ELEMENT);
-        this.remoteStreams.set(user.uid, {
-          ...this.remoteStreams.get(user.uid),
-          video: videoTrack,
-        });
-        (this.eventsMap.get('RemoteVideoStateChanged') as callbackType)(
-          user.uid,
-          2,
-          0,
-          0,
+    let clientPromises: Promise<UID>[];
+    if (this.role === Role.Teacher) {
+      clientPromises = this.students.map((student) => {
+        const studentClient = this.clientMap.get(student);
+        if (studentClient) {
+          setupListeners(
+            studentClient,
+            this.eventsMap,
+            this.inScreenshare,
+            this.screenClient,
+            this.remoteStreams,
+          );
+        }
+        return studentClient?.join(
+          this.appId,
+          `${this.teacher}_${student}`,
+          null,
+          null,
+        ) as Promise<UID>;
+      });
+    } else {
+      const teacherClient = this.clientMap.get(this.teacher);
+      if (teacherClient) {
+        setupListeners(
+          teacherClient,
+          this.eventsMap,
+          this.inScreenshare,
+          this.screenClient,
+          this.remoteStreams,
+          true,
         );
       }
-    });
-    this.client.on('user-unpublished', async (user, mediaType) => {
-      if (mediaType === 'audio') {
-        const {audio, ...rest} = this.remoteStreams.get(user.uid);
-        this.remoteStreams.set(user.uid, rest);
-        (this.eventsMap.get('RemoteAudioStateChanged') as callbackType)(
-          user.uid,
-          0,
-          0,
-          0,
-        );
-      } else {
-        const {video, ...rest} = this.remoteStreams.get(user.uid);
-        this.remoteStreams.set(user.uid, rest);
-        (this.eventsMap.get('RemoteVideoStateChanged') as callbackType)(
-          user.uid,
-          0,
-          0,
-          0,
-        );
-      }
-    });
-
-    // this.client.on('stream-fallback', (evt))
-    this.client.on('stream-type-changed', function (uid, streamType) {
-      console.log('[fallback]: ', uid, streamType);
-    });
+      clientPromises = [
+        teacherClient?.join(
+          this.appId,
+          this.teacher,
+          null,
+          null,
+        ) as Promise<UID>,
+      ];
+    }
+    // setupListeners(
+    //   this.client,
+    //   this.eventsMap,
+    //   this.inScreenshare,
+    //   this.screenClient,
+    //   this.remoteStreams,
+    // );
     await this.client.join(
       this.appId,
       channelName,
@@ -422,6 +368,9 @@ export default class RtcEngine {
     );
     this.isJoined = true;
     await this.publish();
+    if (this.role === Role.Teacher) {
+      await Promise.all(clientPromises);
+    }
   }
 
   async leaveChannel(): Promise<void> {
