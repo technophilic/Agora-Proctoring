@@ -1,12 +1,12 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useContext, useState} from 'react';
@@ -32,7 +32,6 @@ import RemoteEndCall from '../subComponents/RemoteEndCall';
 import chatContext from './ChatContext';
 import Clipboard from '../subComponents/Clipboard';
 import ColorContext from './ColorContext';
-import {gql, useQuery} from '@apollo/client';
 import icons from '../assets/icons';
 import platform from '../subComponents/Platform';
 import {SidePanelType} from '../subComponents/SidePanelEnum';
@@ -47,12 +46,14 @@ const ParticipantView = (props: any) => {
     Dimensions.get('window').width > Dimensions.get('window').height,
   ]);
   const isSmall = dim[0] < 700;
-  
+
   return (
     <View
       style={
         Platform.OS === 'web'
-          ? isSmall ? style.participantViewNative : style.participantView
+          ? isSmall
+            ? style.participantViewNative
+            : style.participantView
           : style.participantViewNative
       }>
       <TouchableOpacity style={style.backButton}>
@@ -98,7 +99,8 @@ const ParticipantView = (props: any) => {
                         {userList[user.uid]
                           ? userList[user.uid].name + ' '
                           : String(user.uid)[0] === '1'
-                            ? 'PSTN User ' : 'User '}
+                          ? 'PSTN User '
+                          : 'User '}
                       </Text>
                       {userList[user.uid]?.type !== UserType.ScreenShare ? (
                         <View style={style.participantButtonContainer}>
@@ -125,8 +127,16 @@ const ParticipantView = (props: any) => {
           )}
         </MinUidConsumer>
       </ScrollView>
-      <View style={{width: '100%', height: 50, alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-        <CopyJoinInfo showText={true}/>
+      <View
+        style={{
+          width: '100%',
+          height: 50,
+          alignSelf: 'flex-end',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <CopyJoinInfo showText={true} />
       </View>
     </View>
   );

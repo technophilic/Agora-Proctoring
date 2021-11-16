@@ -87,26 +87,6 @@ const Navbar = (props: any) => {
       ) : (
         <></>
       )}
-      <View style={[style.roomNameContainer, Platform.OS === 'web' && !mobileAndTabletCheck() ? {transform: [{translateX: '50%'}]} : {}]}>
-        {Platform.OS === 'web' ? (
-          <View
-            style={{flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 5}}>
-            <Text style={style.roomNameText}>{mobileAndTabletCheck() ? title.length > 13 ? title.slice(0,13) + '..' : title : title}</Text>
-            <View
-              style={{
-                backgroundColor: $config.PRIMARY_FONT_COLOR + '80',
-                width: 1,
-                height: 'auto',
-                marginHorizontal: 10,
-              }}
-            />
-            <CopyJoinInfo />
-          </View>
-        ) : (
-          <Text style={style.roomNameText}>{title}</Text>
-        )}  
-        
-      </View>
       <View
         style={{
           width: '50%',

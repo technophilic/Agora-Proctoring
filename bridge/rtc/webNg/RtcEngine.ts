@@ -29,6 +29,7 @@ import type {
   Subscription,
 } from 'react-native-agora/lib/typescript/src/common/RtcEvents';
 import {VideoProfile} from '../quality';
+import {Role} from './Types';
 
 interface MediaDeviceInfo {
   readonly deviceId: string;
@@ -157,6 +158,7 @@ export default class RtcEngine {
   public clientMap = new Map<string, IAgoraRTCClient>();
   public students: string[] = [];
   public teacher: string = '';
+  public role: Role = Role.Unknown;
   // public multiChannelremoteStreams = new Map<UID, RemoteStream>();
   // public streamSpec: AgoraRTC.StreamSpec;
   // public streamSpecScreenshare: ScreenVideoTrackInitConfig;
@@ -192,6 +194,7 @@ export default class RtcEngine {
     }
     // If proctor
     if (window.location.pathname.includes('proctor')) {
+      this.role = Role.Teacher;
       const students = urlParams.get('students')?.split(',');
       if (students) {
         this.students = students;
@@ -206,6 +209,7 @@ export default class RtcEngine {
         });
       }
     } else if (window.location.pathname.includes('exam')) {
+      this.role = Role.Student;
       const student = urlParams.get('student');
       if (student) {
         this.students[0] = student;

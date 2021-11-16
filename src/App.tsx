@@ -1,12 +1,12 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useState} from 'react';
@@ -30,7 +30,6 @@ import ToastConfig from './subComponents/toastConfig';
 import shouldAuthenticate from './utils/shouldAuthenticate';
 import KeyboardManager from 'react-native-keyboard-manager';
 
-
 if (Platform.OS === 'ios') {
   KeyboardManager.setEnable(true);
   KeyboardManager.setEnableAutoToolbar(false);
@@ -50,43 +49,43 @@ const App: React.FC = () => {
         <StatusBar hidden={true} />
         <Toast ref={(ref) => Toast.setRef(ref)} config={ToastConfig} />
         <StorageProvider>
-          <GraphQLProvider>
-            <Router>
-              <SessionProvider>
-                <ColorConfigure>
-                  <Navigation />
-                  <Switch>
-                    <Route exact path={'/'}>
-                      <Redirect to={'/create'} />
+          {/* <GraphQLProvider> */}
+          <Router>
+            <SessionProvider>
+              <ColorConfigure>
+                <Navigation />
+                <Switch>
+                  <Route exact path={'/'}>
+                    <Redirect to={'/create'} />
+                  </Route>
+                  <Route exact path={'/authenticate'}>
+                    {shouldAuthenticate ? <OAuth /> : <Redirect to={'/'} />}
+                  </Route>
+                  <Route path={'/auth-token/:token'}>
+                    <StoreToken />
+                  </Route>
+                  <Route exact path={'/join'}>
+                    <Join phrase={phrase} onChangePhrase={onChangePhrase} />
+                  </Route>
+                  {shouldAuthenticate ? (
+                    <PrivateRoute
+                      path={'/create'}
+                      failureRedirectTo={'/authenticate'}>
+                      <Create />
+                    </PrivateRoute>
+                  ) : (
+                    <Route path={'/create'}>
+                      <Create />
                     </Route>
-                    <Route exact path={'/authenticate'}>
-                      {shouldAuthenticate ? <OAuth /> : <Redirect to={'/'} />}
-                    </Route>
-                    <Route path={'/auth-token/:token'}>
-                      <StoreToken />
-                    </Route>
-                    <Route exact path={'/join'}>
-                      <Join phrase={phrase} onChangePhrase={onChangePhrase} />
-                    </Route>
-                    {shouldAuthenticate ? (
-                      <PrivateRoute
-                        path={'/create'}
-                        failureRedirectTo={'/authenticate'}>
-                        <Create />
-                      </PrivateRoute>
-                    ) : (
-                      <Route path={'/create'}>
-                        <Create />
-                      </Route>
-                    )}
-                    <Route path={'/:phrase'}>
-                      <VideoCall />
-                    </Route>
-                  </Switch>
-                </ColorConfigure>
-              </SessionProvider>
-            </Router>
-          </GraphQLProvider>
+                  )}
+                  <Route path={'/:phrase'}>
+                    <VideoCall />
+                  </Route>
+                </Switch>
+              </ColorConfigure>
+            </SessionProvider>
+          </Router>
+          {/* </GraphQLProvider> */}
         </StorageProvider>
       </SafeAreaView>
     </ImageBackground>
