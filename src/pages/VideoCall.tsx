@@ -35,6 +35,7 @@ import {SidePanelType} from '../subComponents/SidePanelEnum';
 import {videoView} from '../../theme.json';
 import Layout from '../subComponents/LayoutEnum';
 import Toast from '../../react-native-toast-message';
+import WhiteboardConfigure from '../components/WhiteboardConfigure';
 
 const useChatNotification = (
   messageStore: string | any[],
@@ -65,7 +66,8 @@ const useChatNotification = (
 };
 
 const NotificationControl = ({children, chatDisplayed, setSidePanel}) => {
-  const {messageStore, privateMessageStore, userList, localUid} = useContext(ChatContext);
+  const {messageStore, privateMessageStore, userList, localUid} =
+    useContext(ChatContext);
   const [
     lastCheckedPublicState,
     setLastCheckedPublicState,
@@ -116,8 +118,13 @@ const NotificationControl = ({children, chatDisplayed, setSidePanel}) => {
       messageStore[messageStore.length - 1]?.uid !== localUid
     ) {
       Toast.show({
-        text1: messageStore[messageStore.length - 1]?.msg.length > 50 ? messageStore[messageStore.length - 1]?.msg.slice(1, 50) + '...' : messageStore[messageStore.length - 1]?.msg.slice(1),
-        text2: userList[messageStore[messageStore.length - 1]?.uid] ? 'From: ' + userList[messageStore[messageStore.length - 1]?.uid].name : '',
+        text1:
+          messageStore[messageStore.length - 1]?.msg.length > 50
+            ? messageStore[messageStore.length - 1]?.msg.slice(1, 50) + '...'
+            : messageStore[messageStore.length - 1]?.msg.slice(1),
+        text2: userList[messageStore[messageStore.length - 1]?.uid]
+          ? 'From: ' + userList[messageStore[messageStore.length - 1]?.uid].name
+          : '',
         visibilityTime: 1000,
         onPress: () => {
           setSidePanel(SidePanelType.Chat);
@@ -239,6 +246,10 @@ const VideoCall: React.FC = () => {
       ? {key: null, mode: RnEncryptionEnum.AES128XTS, screenKey: null}
       : false,
   };
+  let whiteboardProps = {
+    roomUuid: null,
+    roomToken: null,
+  }
   let data, loading, error;
 
   ({data, loading, error} = useQuery(
@@ -312,109 +323,37 @@ const VideoCall: React.FC = () => {
               styleProps,
             }}>
             <RtcConfigure callActive={callActive}>
-              <DeviceConfigure>
-                <RtmConfigure
-                  setRecordingActive={setRecordingActive}
-                  name={username}
-                  callActive={callActive}>
-                  {callActive ? (
-                    <View style={style.full}>
-                      <NotificationControl
-                        setSidePanel={setSidePanel}
-                        chatDisplayed={sidePanel === SidePanelType.Chat}>
-                        {({
-                          pendingPublicNotification,
-                          pendingPrivateNotification,
-                          setLastCheckedPublicState,
-                          lastCheckedPublicState,
-                          lastCheckedPrivateState,
-                          setLastCheckedPrivateState,
-                          privateMessageCountMap,
-                          setPrivateMessageLastSeen,
-                        }) => (
-                          <>
-                            <Navbar
-                              sidePanel={sidePanel}
-                              setSidePanel={setSidePanel}
-                              layout={layout}
-                              setLayout={setLayout}
-                              recordingActive={recordingActive}
-                              setRecordingActive={setRecordingActive}
-                              isHost={isHost}
-                              title={title}
-                              pendingMessageLength={
-                                pendingPublicNotification +
-                                pendingPrivateNotification
-                              }
-                              setLastCheckedPublicState={
-                                setLastCheckedPublicState
-                              }
-                            />
-                            <View style={[style.videoView, {backgroundColor: '#ffffff00'}]}>
-                              {layout === Layout.Pinned ? (
-                                <PinnedVideo />
-                              ) : (
-                                <GridVideo setLayout={setLayout} />
-                              )}
-                              {sidePanel === SidePanelType.Participants ? (
-                                <ParticipantsView
-                                  isHost={isHost}
-                                  // setParticipantsView={setParticipantsView}
-                                  setSidePanel={setSidePanel}
-                                />
-                              ) : (
-                                <></>
-                              )}
-                              {sidePanel === SidePanelType.Chat ? (
-                                $config.CHAT ? (
-                                  <Chat
-                                    privateMessageCountMap={
-                                      privateMessageCountMap
-                                    }
-                                    pendingPublicNotification={
-                                      pendingPublicNotification
-                                    }
-                                    pendingPrivateNotification={
-                                      pendingPrivateNotification
-                                    }
-                                    setPrivateMessageLastSeen={
-                                      setPrivateMessageLastSeen
-                                    }
-                                    lastCheckedPrivateState={
-                                      lastCheckedPrivateState
-                                    }
-                                  />
-                                ) : (
-                                  <></>
-                                )
-                              ) : (
-                                <></>
-                              )}
-                              {sidePanel === SidePanelType.Settings ? (
-                                <SettingsView
-                                  isHost={isHost}
-                                  // setParticipantsView={setParticipantsView}
-                                  setSidePanel={setSidePanel}
-                                />
-                              ) : (
-                                <></>
-                              )}
-                            </View>
-                            {Platform.OS !== 'web' &&
-                            sidePanel === SidePanelType.Chat ? (
-                              <></>
-                            ) : (
-                              <Controls
+              <WhiteboardConfigure>
+                <DeviceConfigure>
+                  <RtmConfigure
+                    setRecordingActive={setRecordingActive}
+                    name={username}
+                    callActive={callActive}>
+                    {callActive ? (
+                      <View style={style.full}>
+                        <NotificationControl
+                          setSidePanel={setSidePanel}
+                          chatDisplayed={sidePanel === SidePanelType.Chat}>
+                          {({
+                            pendingPublicNotification,
+                            pendingPrivateNotification,
+                            setLastCheckedPublicState,
+                            lastCheckedPublicState,
+                            lastCheckedPrivateState,
+                            setLastCheckedPrivateState,
+                            privateMessageCountMap,
+                            setPrivateMessageLastSeen,
+                          }) => (
+                            <>
+                              <Navbar
+                                sidePanel={sidePanel}
+                                setSidePanel={setSidePanel}
+                                layout={layout}
                                 setLayout={setLayout}
                                 recordingActive={recordingActive}
                                 setRecordingActive={setRecordingActive}
-                                // chatDisplayed={chatDisplayed}
-                                // setChatDisplayed={setChatDisplayed}
                                 isHost={isHost}
-                                // participantsView={participantsView}
-                                // setParticipantsView={setParticipantsView}
-                                sidePanel={sidePanel}
-                                setSidePanel={setSidePanel}
+                                title={title}
                                 pendingMessageLength={
                                   pendingPublicNotification +
                                   pendingPrivateNotification
@@ -423,24 +362,102 @@ const VideoCall: React.FC = () => {
                                   setLastCheckedPublicState
                                 }
                               />
-                            )}
-                          </>
-                        )}
-                      </NotificationControl>
-                    </View>
-                  ) : $config.PRECALL ? (
-                    <Precall
-                      error={errorMessage}
-                      username={username}
-                      setUsername={setUsername}
-                      setCallActive={setCallActive}
-                      queryComplete={queryComplete}
-                    />
-                  ) : (
-                    <></>
-                  )}
-                </RtmConfigure>
-              </DeviceConfigure>
+                              <View
+                                style={[
+                                  style.videoView,
+                                  {backgroundColor: '#ffffff00'},
+                                ]}>
+                                {layout === Layout.Pinned ? (
+                                  <PinnedVideo />
+                                ) : (
+                                  <GridVideo setLayout={setLayout} />
+                                )}
+                                {sidePanel === SidePanelType.Participants ? (
+                                  <ParticipantsView
+                                    isHost={isHost}
+                                    // setParticipantsView={setParticipantsView}
+                                    setSidePanel={setSidePanel}
+                                  />
+                                ) : (
+                                  <></>
+                                )}
+                                {sidePanel === SidePanelType.Chat ? (
+                                  $config.CHAT ? (
+                                    <Chat
+                                      privateMessageCountMap={
+                                        privateMessageCountMap
+                                      }
+                                      pendingPublicNotification={
+                                        pendingPublicNotification
+                                      }
+                                      pendingPrivateNotification={
+                                        pendingPrivateNotification
+                                      }
+                                      setPrivateMessageLastSeen={
+                                        setPrivateMessageLastSeen
+                                      }
+                                      lastCheckedPrivateState={
+                                        lastCheckedPrivateState
+                                      }
+                                    />
+                                  ) : (
+                                    <></>
+                                  )
+                                ) : (
+                                  <></>
+                                )}
+                                {sidePanel === SidePanelType.Settings ? (
+                                  <SettingsView
+                                    isHost={isHost}
+                                    // setParticipantsView={setParticipantsView}
+                                    setSidePanel={setSidePanel}
+                                  />
+                                ) : (
+                                  <></>
+                                )}
+                              </View>
+                              {Platform.OS !== 'web' &&
+                              sidePanel === SidePanelType.Chat ? (
+                                <></>
+                              ) : (
+                                <Controls
+                                  setLayout={setLayout}
+                                  recordingActive={recordingActive}
+                                  setRecordingActive={setRecordingActive}
+                                  // chatDisplayed={chatDisplayed}
+                                  // setChatDisplayed={setChatDisplayed}
+                                  isHost={isHost}
+                                  // participantsView={participantsView}
+                                  // setParticipantsView={setParticipantsView}
+                                  sidePanel={sidePanel}
+                                  setSidePanel={setSidePanel}
+                                  pendingMessageLength={
+                                    pendingPublicNotification +
+                                    pendingPrivateNotification
+                                  }
+                                  setLastCheckedPublicState={
+                                    setLastCheckedPublicState
+                                  }
+                                />
+                              )}
+                            </>
+                          )}
+                        </NotificationControl>
+                      </View>
+                    ) : $config.PRECALL ? (
+                      <Precall
+                        error={errorMessage}
+                        username={username}
+                        setUsername={setUsername}
+                        setCallActive={setCallActive}
+                        queryComplete={queryComplete}
+                      />
+                    ) : (
+                      <></>
+                    )}
+                  </RtmConfigure>
+                </DeviceConfigure>
+              </WhiteboardConfigure>
             </RtcConfigure>
           </PropsProvider>
         </>
