@@ -29,6 +29,7 @@ import type {
   Subscription,
 } from 'react-native-agora/lib/typescript/src/common/RtcEvents';
 import {VideoProfile} from '../quality';
+import {Role} from './Types';
 
 interface MediaDeviceInfo {
   readonly deviceId: string;
@@ -154,6 +155,11 @@ export default class RtcEngine {
   public localStream: LocalStream = {};
   public screenStream: ScreenStream = {};
   public remoteStreams = new Map<UID, RemoteStream>();
+  public clientMap = new Map<string, IAgoraRTCClient>();
+  public students: string[] = [];
+  public teacher: string = '';
+  public role: Role = Role.Unknown;
+  // public multiChannelremoteStreams = new Map<UID, RemoteStream>();
   // public streamSpec: AgoraRTC.StreamSpec;
   // public streamSpecScreenshare: ScreenVideoTrackInitConfig;
   private inScreenshare: Boolean = false;
@@ -181,16 +187,34 @@ export default class RtcEngine {
       codec: 'vp8',
       mode: 'rtc',
     });
-    // this.streamSpec = {
-    //   video: true,
-    //   audio: true,
-    // };
-    // this.streamSpecScreenshare = {
-    //   audio: false,
-    //   video: false,
-    //   screen: true,
-    //   screenAudio: true,
-    // };
+    const urlParams = new URLSearchParams(window.location.search);
+    const teacher = urlParams.get('teacher');
+    if (teacher) {
+      this.teacher = teacher;
+    }
+    // If proctor
+    if (window.location.pathname.includes('proctor')) {
+      this.role = Role.Teacher;
+      const students = urlParams.get('students')?.split(',');
+      if (students) {
+        this.students = students;
+        students.map((student) => {
+          this.clientMap.set(
+            student,
+            AgoraRTC.createClient({
+              codec: 'vp8',
+              mode: 'rtc',
+            }),
+          );
+        });
+      }
+    } else if (window.location.pathname.includes('exam')) {
+      this.role = Role.Student;
+      const student = urlParams.get('student');
+      if (student) {
+        this.students[0] = student;
+      }
+    }
   }
   static async create(appId: string): Promise<RtcEngine> {
     let engine = new RtcEngine(appId);

@@ -1,12 +1,12 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useState, useContext, useEffect} from 'react';
@@ -22,11 +22,10 @@ import PinnedVideo from '../components/PinnedVideo';
 import Controls from '../components/Controls';
 import GridVideo from '../components/GridVideo';
 import styles from '../components/styles';
-import {useParams, useHistory} from '../components/Router';
+import {useParams, useLocation} from '../components/Router';
 import Chat from '../components/Chat';
 import RtmConfigure from '../components/RTMConfigure';
 import DeviceConfigure from '../components/DeviceConfigure';
-import {gql, useQuery} from '@apollo/client';
 // import Watermark from '../subComponents/Watermark';
 import StorageContext from '../components/StorageContext';
 import Logo from '../subComponents/Logo';
@@ -36,6 +35,7 @@ import {videoView} from '../../theme.json';
 import Layout from '../subComponents/LayoutEnum';
 import Toast from '../../react-native-toast-message';
 import WhiteboardConfigure from '../components/WhiteboardConfigure';
+import {Role} from '../../bridge/rtc/webNg/Types';
 
 const useChatNotification = (
   messageStore: string | any[],
@@ -147,51 +147,6 @@ const NotificationControl = ({children, chatDisplayed, setSidePanel}) => {
   });
 };
 
-const JOIN_CHANNEL_PHRASE_AND_GET_USER = gql`
-  query JoinChannel($passphrase: String!) {
-    joinChannel(passphrase: $passphrase) {
-      channel
-      title
-      isHost
-      secret
-      mainUser {
-        rtc
-        rtm
-        uid
-      }
-      screenShare {
-        rtc
-        rtm
-        uid
-      }
-    }
-    getUser {
-      name
-      email
-    }
-  }
-`;
-
-const JOIN_CHANNEL_PHRASE = gql`
-  query JoinChannel($passphrase: String!) {
-    joinChannel(passphrase: $passphrase) {
-      channel
-      title
-      isHost
-      secret
-      mainUser {
-        rtc
-        rtm
-        uid
-      }
-      screenShare {
-        rtc
-        rtm
-        uid
-      }
-    }
-  }
-`;
 enum RnEncryptionEnum {
   /**
    * @deprecated
@@ -218,23 +173,57 @@ enum RnEncryptionEnum {
   SM4128ECB = 4,
 }
 
+function useRole() {
+  const {phrase} = useParams<{phrase: string}>();
+  return React.useMemo(
+    () =>
+      phrase === 'proctor'
+        ? Role.Teacher
+        : phrase === 'exam'
+        ? Role.Student
+        : Role.Unknown,
+    [phrase],
+  );
+}
+
+function useQuery() {
+  const {search} = useLocation();
+  return React.useMemo(() => new URLSearchParams(search), [search]);
+}
+
+function useChannelInfo() {
+  const params = useQuery();
+  const role = useRole();
+  let students: string[];
+  if (role === Role.Teacher) {
+    students = params.get('students')?.split(',') as string[];
+  } else {
+    students = [params.get('student') as string];
+  }
+  return [params.get('teacher'), students] as [string, string[]];
+}
 const VideoCall: React.FC = () => {
-  const {store} = useContext(StorageContext);
-  const [username, setUsername] = useState('Getting name...');
-  const [participantsView, setParticipantsView] = useState(false);
+  // const {store} = useContext(StorageContext);
+  const [username, setUsername] = useState('');
   const [callActive, setCallActive] = useState($config.PRECALL ? false : true);
   const [layout, setLayout] = useState(Layout.Grid);
   const [recordingActive, setRecordingActive] = useState(false);
-  const [chatDisplayed, setChatDisplayed] = useState(false);
-  const [queryComplete, setQueryComplete] = useState(false);
+  const [queryComplete, setQueryComplete] = useState(true);
   const [sidePanel, setSidePanel] = useState<SidePanelType>(SidePanelType.None);
-  const {phrase} = useParams();
+  const role = useRole();
+  const [teacher, students] = useChannelInfo();
+  // const {phrase} = useParams();
+
+  console.log('[teacher, students]', [teacher, students]);
+  // console.log('[params]', params);
+  // console.log('[Role]', Role[role]);
+
   const [errorMessage, setErrorMessage] = useState(null);
   let isHost = true; //change to false by default after testing
-  let title = null;
+  let title = '';
   let rtcProps = {
     appId: $config.APP_ID,
-    channel: null,
+    channel: role === Role.Teacher ? teacher : students[0],
     uid: null,
     token: null,
     rtm: null,
@@ -242,76 +231,18 @@ const VideoCall: React.FC = () => {
     screenShareToken: null,
     profile: $config.PROFILE,
     dual: true,
-    encryption: $config.ENCRYPTION_ENABLED
-      ? {key: null, mode: RnEncryptionEnum.AES128XTS, screenKey: null}
-      : false,
+    encryption: false,
   };
   let whiteboardProps = {
     roomUuid: null,
     roomToken: null,
-  }
-  let data, loading, error;
-
-  ({data, loading, error} = useQuery(
-    store.token === null
-      ? JOIN_CHANNEL_PHRASE
-      : JOIN_CHANNEL_PHRASE_AND_GET_USER,
-    {
-      variables: {passphrase: phrase},
-    },
-  ));
-
-  if (error) {
-    console.log('error', error);
-    // console.log('error data', data);
-    if (!errorMessage) {
-      setErrorMessage(error);
-    }
-  }
-
-  if (!loading && data) {
-    console.log('token:', rtcProps.token);
-    console.log('error', data.error);
-    rtcProps = {
-      appId: $config.APP_ID,
-      channel: data.joinChannel.channel,
-      uid: data.joinChannel.mainUser.uid,
-      token: data.joinChannel.mainUser.rtc,
-      rtm: data.joinChannel.mainUser.rtm,
-      dual: true,
-      profile: $config.PROFILE,
-      encryption: $config.ENCRYPTION_ENABLED
-        ? {
-            key: data.joinChannel.secret,
-            mode: RnEncryptionEnum.AES128XTS,
-            screenKey: data.joinChannel.secret,
-          }
-        : false,
-      screenShareUid: data.joinChannel.screenShare.uid,
-      screenShareToken: data.joinChannel.screenShare.rtc,
-    };
-    isHost = data.joinChannel.isHost;
-    title = data.joinChannel.title;
-    console.log('query done: ', data, queryComplete);
-    if (username === 'Getting name...') {
-      if (data.getUser) {
-        setUsername(data.getUser.name);
-      } else {
-        setUsername('');
-      }
-    }
-    console.log('token:', rtcProps.token);
-    queryComplete ? {} : setQueryComplete(true);
-  }
-
-  const history = useHistory();
+  };
   const callbacks = {
     EndCall: () =>
       setTimeout(() => {
         history.push('/');
       }, 0),
   };
-  // throw new Error("My first Sentry error!");
   return (
     <>
       {queryComplete || !callActive ? (
