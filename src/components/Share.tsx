@@ -1,12 +1,12 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useState, useContext} from 'react';
@@ -29,83 +29,62 @@ import SecondaryButton from '../atoms/SecondaryButton';
 import icons from '../assets/icons';
 import Toast from '../../react-native-toast-message';
 
-const Share = (props: any) => {
+// const res = new URLSearchParams(window.location.search)
+// const string = res.get('students')
+// const students = s.split(',')
+
+const Share = (props: {teacherName: string; students: string[]}) => {
   const history = useHistory();
-  const {
-    urlView,
-    urlHost,
-    pstn,
-    joinPhrase,
-    roomTitle,
-    hostControlCheckbox,
-  } = props;
-  // const {primaryColor} = useContext(ColorContext);
-  // const pstn = {number: '+1 206 656 1157', dtmf: '2342'}
+  const {teacherName, students} = props;
+  const proctorUrl =
+    'proctor?' +
+    'teacher=' +
+    teacherName +
+    '&students=' +
+    students.map((student) => student).join(',');
+  const examUrl =
+    'exam?' +
+    'teacher=' +
+    teacherName +
+    '&students=' +
+    students.map((student) => student).join(',');
   const enterMeeting = () => {
-    if (urlHost) {
-      history.push(`/${joinPhrase}`);
+    if (proctorUrl) {
+      history.push(`/${proctorUrl}`);
     }
   };
 
-  const copyToClipboard = () => {
-    Toast.show({ text1: 'Copied to Clipboard', visibilityTime: 1000 });
-    let stringToCopy = '';
+  //   const copyToClipboard = () => {
+  //     Toast.show({text1: 'Copied to Clipboard', visibilityTime: 1000});
+  //     let stringToCopy = '';
 
-    $config.FRONTEND_ENDPOINT
-      ? hostControlCheckbox
-        ? (stringToCopy += `Meeting - ${roomTitle}
-URL for Attendee: ${$config.FRONTEND_ENDPOINT}/${urlView}
-URL for Host: ${$config.FRONTEND_ENDPOINT}/${urlHost}`)
-        : (stringToCopy += `Meeting - ${roomTitle}
-Meeting URL: ${$config.FRONTEND_ENDPOINT}/${urlHost}`)
-      : platform === 'web'
-      ? hostControlCheckbox
-        ? (stringToCopy += `Meeting - ${roomTitle}
-URL for Attendee: ${window.location.origin}/${urlView}
-URL for Host: ${window.location.origin}/${urlHost}`)
-        : (stringToCopy += `Meeting - ${roomTitle}
-Meeting URL: ${window.location.origin}/${urlHost}`)
-      : hostControlCheckbox
-      ? (stringToCopy += `Meeting - ${roomTitle}
-Attendee Meeting ID: ${urlView}
-Host Meeting ID: ${urlHost}`)
-      : (stringToCopy += `Meeting - ${roomTitle}
-Meeting URL: ${urlHost}`);
+  //     $config.FRONTEND_ENDPOINT
+  //       ? hostControlCheckbox
+  //         ? (stringToCopy += `Meeting - ${roomTitle}
+  // URL for Attendee: ${$config.FRONTEND_ENDPOINT}/${urlView}
+  // URL for Host: ${$config.FRONTEND_ENDPOINT}/${urlHost}`)
+  //         : (stringToCopy += `Meeting - ${roomTitle}
+  // Meeting URL: ${$config.FRONTEND_ENDPOINT}/${urlHost}`)
+  //       : platform === 'web'
+  //       ? hostControlCheckbox
+  //         ? (stringToCopy += `Meeting - ${roomTitle}
+  // URL for Attendee: ${window.location.origin}/${urlView}
+  // URL for Host: ${window.location.origin}/${urlHost}`)
+  //         : (stringToCopy += `Meeting - ${roomTitle}
+  // Meeting URL: ${window.location.origin}/${urlHost}`)
+  //       : hostControlCheckbox
+  //       ? (stringToCopy += `Meeting - ${roomTitle}
+  // Attendee Meeting ID: ${urlView}
+  // Host Meeting ID: ${urlHost}`)
+  //       : (stringToCopy += `Meeting - ${roomTitle}
+  // Meeting URL: ${urlHost}`);
 
-    pstn
-      ? (stringToCopy += `PSTN Number: ${pstn.number}
-PSTN Pin: ${pstn.dtmf}`)
-      : '';
-    Clipboard.setString(stringToCopy);
-  };
-
-  const copyHostUrl = () => {
-    Toast.show({ text1: 'Copied to Clipboard',  visibilityTime: 1000});
-    let stringToCopy = '';
-    $config.FRONTEND_ENDPOINT
-      ? (stringToCopy += `${$config.FRONTEND_ENDPOINT}/${urlHost}`)
-      : platform === 'web'
-      ? (stringToCopy += `${window.location.origin}/${urlHost}`)
-      : (stringToCopy += `Meeting ID: ${urlHost}`)
-    Clipboard.setString(stringToCopy);
-  };
-
-  const copyAttendeeURL = () => {
-    Toast.show({ text1: 'Copied to Clipboard',  visibilityTime: 1000});
-    let stringToCopy = '';
-    $config.FRONTEND_ENDPOINT
-      ? (stringToCopy += `${$config.FRONTEND_ENDPOINT}/${urlView}`)
-      : platform === 'web'
-      ? (stringToCopy += `${window.location.origin}/${urlView}`)
-      : (stringToCopy += `Meeting ID: ${urlView}`)
-    Clipboard.setString(stringToCopy);
-  };
-
-  const copyPstn = () => {
-    Toast.show({ text1: 'Copied to Clipboard',  visibilityTime: 1000});
-    let stringToCopy = `PSTN Number: ${pstn?.number} PSTN Pin: ${pstn?.dtmf}`;
-    Clipboard.setString(stringToCopy);
-  }
+  //     pstn
+  //       ? (stringToCopy += `PSTN Number: ${pstn.number}
+  // PSTN Pin: ${pstn.dtmf}`)
+  //       : '';
+  //     Clipboard.setString(stringToCopy);
+  //   };
 
   const [dim, setDim] = useState([
     Dimensions.get('window').width,
@@ -120,116 +99,116 @@ PSTN Pin: ${pstn.dtmf}`)
     <View style={style.content} onLayout={onLayout}>
       <View style={style.leftContent}>
         <View>
-        <Text style={style.heading}>{$config.APP_NAME}</Text>
-        <Text style={style.headline}>{$config.LANDING_SUB_HEADING}</Text>
+          <Text style={style.heading}>{$config.APP_NAME}</Text>
+          <Text style={style.headline}>{$config.LANDING_SUB_HEADING}</Text>
         </View>
-        {hostControlCheckbox ? (
-            <View style={style.urlContainer}>
-              <View style={{width: '80%'}}>
-              <Text style={style.urlTitle}>
-                {$config.FRONTEND_ENDPOINT || platform === 'web'
-                ? "Attendee URL" : "Attendee ID"}
-              </Text>
-              <View style={style.urlHolder}>
-                <Text style={[style.url, Platform.OS === 'web' ? urlWeb : {opacity: 1}]}>
-                  {$config.FRONTEND_ENDPOINT
-                    ? `${$config.FRONTEND_ENDPOINT}/${urlView}`
-                    : platform === 'web'
-                      ? `${window.location.origin}/${urlView}`
-                      : urlView}
-                </Text>
-                
-              </View>
-              </View>
-            <View style={{ marginLeft: 'auto', flexDirection: 'row', alignSelf: 'center' }}>
-              <View style={{ backgroundColor: $config.PRIMARY_COLOR + '80', width: 1, height: 'auto', marginRight: 15 }} />
-              <TouchableOpacity style={{ width: 40, height: 40, marginVertical: 'auto' }} onPress={()=>copyAttendeeURL()}>
-                <Image resizeMode={'contain'}
-                  style={{ width: '100%', height: '100%', tintColor: $config.PRIMARY_COLOR, opacity: 0.5}}
-                  source={{ uri: icons.clipboard }}></Image>
-              </TouchableOpacity>
-            </View>
-            </View>
-        ) : (
-          <></>
-        )}
         <View style={style.urlContainer}>
-          <View style={{ width: '80%' }}>
-            <Text style={style.urlTitle}>
-            {$config.FRONTEND_ENDPOINT || platform === 'web' ? hostControlCheckbox
-                ? 'Host URL' : 'Meeting URL'
-                : hostControlCheckbox ? 'Host ID' : 'Meeting ID'}
-            </Text>
+          <View style={{width: '80%'}}>
+            <Text style={style.urlTitle}>Proctor URL</Text>
+            <View style={{marginVertical: 5}} />
             <View style={style.urlHolder}>
-              <Text style={[style.url, Platform.OS === 'web' ? urlWeb : {opacity: 1}]}>
+              <a
+                href={
+                  $config.FRONTEND_ENDPOINT
+                    ? `${$config.FRONTEND_ENDPOINT}/${proctorUrl}`
+                    : platform === 'web'
+                    ? `${window.location.origin}/${proctorUrl}`
+                    : proctorUrl
+                }
+                style={{
+                  color: $config.PRIMARY_FONT_COLOR,
+                  fontSize: 16,
+                  fontFamily: 'sans-serif',
+                }}>
                 {$config.FRONTEND_ENDPOINT
-                  ? `${$config.FRONTEND_ENDPOINT}/${urlHost}`
+                  ? `${$config.FRONTEND_ENDPOINT}/${proctorUrl}`
                   : platform === 'web'
-                    ? `${window.location.origin}/${urlHost}`
-                    : urlHost}
-              </Text>
-
+                  ? `${window.location.origin}/${proctorUrl}`
+                  : proctorUrl}
+              </a>
             </View>
           </View>
-          <View style={{ marginLeft: 'auto', flexDirection: 'row', alignSelf: 'center'  }}>
-            <View style={{ backgroundColor: $config.PRIMARY_COLOR + '80', width: 1, height: 'auto', marginRight: 15 }} />
-            <TouchableOpacity style={{ width: 40, height: 40, marginVertical: 'auto' }} onPress={()=>copyHostUrl()}>
-                <Image resizeMode={'contain'}
-                  style={{ width: '100%', height: '100%', tintColor: $config.PRIMARY_COLOR, opacity: 0.5}}
-                  source={{ uri: icons.clipboard }}></Image>
-              </TouchableOpacity>
+          {/* <View
+            style={{
+              marginLeft: 'auto',
+              flexDirection: 'row',
+              alignSelf: 'center',
+            }}>
+            <View
+              style={{
+                backgroundColor: $config.PRIMARY_COLOR + '80',
+                width: 1,
+                height: 'auto',
+                marginRight: 15,
+              }}
+            />
+            <TouchableOpacity
+              style={{width: 40, height: 40, marginVertical: 'auto'}}
+              onPress={() => copyHostUrl()}>
+              <Image
+                resizeMode={'contain'}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  tintColor: $config.PRIMARY_COLOR,
+                  opacity: 0.5,
+                }}
+                source={{uri: icons.clipboard}}
+              />
+            </TouchableOpacity>
+          </View> */}
+        </View>
+        <View style={style.urlContainer}>
+          <View style={{width: '100%'}}>
+            <Text style={style.urlTitle}>Student exam URLs</Text>
+            <View style={{marginVertical: 5}} />
+            <View style={{...style.urlHolder, flexDirection: 'column'}}>
+              {console.log('!!students', students)}
+              {students.map((student, i) => (
+                <View key={i} style={{flexDirection: 'row'}}>
+                  <Text style={{fontWeight: '600', fontSize: 18}}>
+                    {student}:{' '}
+                  </Text>
+                  <a
+                    href={
+                      $config.FRONTEND_ENDPOINT
+                        ? `${$config.FRONTEND_ENDPOINT}/exam?teacher=${teacherName}&student=${student}`
+                        : platform === 'web'
+                        ? `${window.location.origin}/exam?teacher=${teacherName}&student=${student}`
+                        : proctorUrl
+                    }
+                    style={{
+                      color: $config.PRIMARY_FONT_COLOR,
+                      fontSize: 16,
+                      fontFamily: 'sans-serif',
+                    }}>
+                    {$config.FRONTEND_ENDPOINT
+                      ? `${$config.FRONTEND_ENDPOINT}/exam?teacher=${teacherName}&student=${student}`
+                      : platform === 'web'
+                      ? `${window.location.origin}/exam?teacher=${teacherName}&student=${student}`
+                      : proctorUrl}
+                  </a>
+                  <View style={{marginVertical: 15}} />
+                </View>
+              ))}
+            </View>
           </View>
         </View>
-        {pstn ? (
-          <View style={style.urlContainer}>
-            <View style={{ width: '80%' }}>
-              <Text style={style.urlTitle}>
-                PSTN
-          </Text>
-              <View>
-                <View style={style.pstnHolder}>
-                  <Text style={style.urlTitle}>Number: </Text>
-                  <Text style={[style.url, Platform.OS === 'web' ? urlWeb : {opacity: 1}]}>{pstn?.number}</Text>
-                </View>
-                <View style={style.pstnHolder}>
-                  <Text style={style.urlTitle}>Pin: </Text>
-                  <Text style={[style.url, Platform.OS === 'web' ? urlWeb : {opacity: 1}]}>{pstn?.dtmf}</Text>
-                </View>
-              </View>
-            </View>
-            <View style={{ marginLeft: 'auto', flexDirection: 'row' }}>
-            <View style={{ backgroundColor: $config.PRIMARY_COLOR + '80', width: 1, height: 'auto', marginRight: 15 }} />
-              <TouchableOpacity style={{ width: 40, height: 40, marginVertical: 'auto' }} onPress={() => copyPstn()}>
-                <Image resizeMode={'contain'}
-                  style={{ width: '100%', height: '100%', tintColor: $config.PRIMARY_COLOR, opacity: 0.5 }}
-                  source={{ uri: icons.clipboard }}></Image>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <></>
-        )}
         <PrimaryButton
           onPress={() => enterMeeting()}
-          text={'Start Meeting (as host)'}
+          text={'Join Exam as Proctor'}
         />
         <View style={{height: 10}} />
-        <SecondaryButton
-          onPress={() => copyToClipboard()}
+        {/* <SecondaryButton
+          // onPress={() => copyToClipboard()}
           text={'Copy invite to clipboard'}
-        />
+        /> */}
       </View>
-      {/* {dim[0] > dim[1] + 150 ? (
-        <View style={style.full}>
-          <Illustration />
-        </View>
-      ) : (
-        <></>
-      )} */}
     </View>
   );
 };
-const urlWeb = {wordBreak: 'break-all'};
+// const urlWeb = {wordBreak: 'break-all'};
+const urlWeb = {};
 
 const style = StyleSheet.create({
   full: {flex: 1},
@@ -289,12 +268,12 @@ const style = StyleSheet.create({
   },
   urlContainer: {
     backgroundColor: $config.PRIMARY_COLOR + '22',
-    padding: 10, 
+    padding: 10,
     marginBottom: 10,
-    borderRadius: 10, 
+    borderRadius: 10,
     width: '100%',
     // minWidth: ''
-    maxWidth: 700,
+    maxWidth: 1200,
     flexDirection: 'row',
     paddingHorizontal: 20,
   },
@@ -331,7 +310,7 @@ const style = StyleSheet.create({
   //   width: '80%',
   // },
   pstnMargin: {
-    marginRight: '10%',
+    // marginRight: '10%',
   },
 });
 
