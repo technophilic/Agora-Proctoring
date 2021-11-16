@@ -22,7 +22,7 @@ import PinnedVideo from '../components/PinnedVideo';
 import Controls from '../components/Controls';
 import GridVideo from '../components/GridVideo';
 import styles from '../components/styles';
-import {useParams, useLocation} from '../components/Router';
+import {useParams, useLocation, useHistory} from '../components/Router';
 import Chat from '../components/Chat';
 import RtmConfigure from '../components/RTMConfigure';
 import DeviceConfigure from '../components/DeviceConfigure';
@@ -212,6 +212,7 @@ const VideoCall: React.FC = () => {
   const [sidePanel, setSidePanel] = useState<SidePanelType>(SidePanelType.None);
   const role = useRole();
   const [teacher, students] = useChannelInfo();
+  const history = useHistory();
   // const {phrase} = useParams();
 
   // console.log('[teacher, students]', [teacher, students]);
