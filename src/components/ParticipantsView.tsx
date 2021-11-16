@@ -98,8 +98,6 @@ const ParticipantView = (props: any) => {
                       <Text style={style.participantText}>
                         {userList[user.uid]
                           ? userList[user.uid].name + ' '
-                          : String(user.uid)[0] === '1'
-                          ? 'PSTN User '
                           : 'User '}
                       </Text>
                       {userList[user.uid]?.type !== UserType.ScreenShare ? (

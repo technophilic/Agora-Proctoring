@@ -99,7 +99,7 @@ const Precall = (props: any) => {
                   }
                 }}
                 onSubmitEditing={() => {}}
-                placeholder="Display Name"
+                placeholder="Device Name"
               />
               <View style={style.margin5Btm} />
               <PrimaryButton

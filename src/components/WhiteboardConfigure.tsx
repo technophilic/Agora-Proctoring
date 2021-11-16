@@ -14,11 +14,7 @@ export interface whiteboardContextInterface {
   leaveWhiteboardRoom: () => void;
 }
 
-export interface WhiteboardPropsInterface {
-  children: React.ReactNode;
-}
-
-const WhiteboardConfigure: React.FC<WhiteboardPropsInterface> = (props) => {
+const WhiteboardConfigure: React.FC = (props) => {
   // Defines intent, whether whiteboard should be active or not
   const [whiteboardActive, setWhiteboardActive] = useState(false);
   // Defines whiteboard room state, whether disconnected, Connected, Connecting etc.

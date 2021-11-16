@@ -1,21 +1,16 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import {View, Text, StyleSheet, Dimensions} from 'react-native';
 import {useHistory} from '../components/Router';
 import Checkbox from '../subComponents/Checkbox';
 import {gql, useMutation} from '@apollo/client';
@@ -37,63 +32,69 @@ type PasswordInput = {
   view: string;
 };
 
-const CREATE_CHANNEL = gql`
-  mutation CreateChannel($title: String!, $backendURL: String!, $enablePSTN: Boolean) {
-    createChannel(title: $title, backendURL: $backendURL, enablePSTN: $enablePSTN) {
-      passphrase {
-        host
-        view
-      }
-      channel
-      title
-      pstn {
-        number
-        dtmf
-      }
-    }
-  }
-`;
+// const CREATE_CHANNEL = gql`
+//   mutation CreateChannel(
+//     $title: String!
+//     $backendURL: String!
+//     $enablePSTN: Boolean
+//   ) {
+//     createChannel(
+//       title: $title
+//       backendURL: $backendURL
+//       enablePSTN: $enablePSTN
+//     ) {
+//       passphrase {
+//         host
+//         view
+//       }
+//       channel
+//       title
+//       pstn {
+//         number
+//         dtmf
+//       }
+//     }
+//   }
+// `;
 
 const Create = () => {
   // const {primaryColor} = useContext(ColorContext);
   const history = useHistory();
-  const [roomTitle, onChangeRoomTitle] = useState('');
-  const [pstnCheckbox, setPstnCheckbox] = useState(false);
-  const [hostControlCheckbox, setHostControlCheckbox] = useState(true);
-  const [urlView, setUrlView] = useState(null);
-  const [urlHost, setUrlHost] = useState(null);
-  const [pstn, setPstn] = useState(null);
+  const [teacherName, setTeacherName] = useState('');
+  const [students, setStudents] = useState<string[]>([]);
+  const [studentInput, setStudentInput] = useState('');
+  // const [pstnCheckbox, setPstnCheckbox] = useState(false);
+  // const [hostControlCheckbox, setHostControlCheckbox] = useState(true);
+  // const [urlView, setUrlView] = useState(null);
+  // const [urlHost, setUrlHost] = useState(null);
+  // const [pstn, setPstn] = useState(null);
   const [roomCreated, setRoomCreated] = useState(false);
-  const [joinPhrase, setJoinPhrase] = useState(null);
-  const [createChannel, {data, loading, error}] = useMutation(CREATE_CHANNEL);
+  // const [joinPhrase, setJoinPhrase] = useState(null);
+  // const [createChannel, {data, loading, error}] = useMutation(CREATE_CHANNEL);
 
-  console.log('mutation data', data);
+  // console.log('mutation data', data);
 
   const createRoom = () => {
-    if (roomTitle !== '') {
+    if (teacherName !== '' && students.length > 0) {
       console.log('Create room invoked');
-      createChannel({
-        variables: {
-          title: roomTitle,
-          backendURL: $config.BACKEND_ENDPOINT,
-          enablePSTN: pstnCheckbox,
-        },
-      })
-        .then((res: any) => {
-          Toast.show({
-            text1: 'Created: ' + roomTitle,
-            visibilityTime: 1000,
-          });
-          console.log('promise data', res);
-          setUrlView(res.data.createChannel.passphrase.view);
-          setUrlHost(res.data.createChannel.passphrase.host);
-          setPstn(res.data.createChannel.pstn);
-          setJoinPhrase(res.data.createChannel.passphrase.host);
-          setRoomCreated(true);
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+
+      // createChannel({
+      //   variables: {
+      //     title: teacherName,
+      //     backendURL: $config.BACKEND_ENDPOINT,
+      //     enablePSTN: pstnCheckbox,
+      //   },
+      // })
+      //   .then((res: any) => {
+      Toast.show({
+        text1: 'Created exam for ' + teacherName,
+        visibilityTime: 1000,
+      });
+      setRoomCreated(true);
+      //   })
+      //   .catch((e) => {
+      //     console.log(e);
+      //   });
     }
   };
 
@@ -114,7 +115,7 @@ const Create = () => {
     <View style={style.main}>
       <View style={style.nav}>
         <Logo />
-        {error ? <Error error={error} /> : <></>}
+        {/* {error ? <Error error={error} /> : <></>} */}
         {/* <OpenInNativeButton /> */}
       </View>
       {!roomCreated ? (
@@ -124,12 +125,54 @@ const Create = () => {
             <Text style={style.headline}>{$config.LANDING_SUB_HEADING}</Text>
             <View style={style.inputs}>
               <TextInput
-                value={roomTitle}
-                onChangeText={(text) => onChangeRoomTitle(text)}
+                value={teacherName}
+                onChangeText={(text) => setTeacherName(text)}
                 onSubmitEditing={() => createRoom()}
-                placeholder="Name your meeting"
+                placeholder="Invigilator name"
               />
-              <View style={{paddingVertical: 10}}>
+              <View>
+                <Text style={style.heading2}>Students taking the exam:</Text>
+                {students.map((student, i) => (
+                  <View key={i} style={{flexDirection: 'row', width: '100%'}}>
+                    <Text style={{flex:1, fontSize: 18}}>
+                      {student}
+                    </Text>
+                    <Text
+                      onPress={() => {
+                        const newStudents = students;
+                        newStudents.splice(i, 1);
+                        setStudents([...newStudents]);
+                      }}
+                      style={{color: 'red', alignSelf: 'flex-end'}}>
+                      x
+                    </Text>
+                  </View>
+                ))}
+                <View style={{marginVertical: 10}} />
+                <TextInput
+                  value={studentInput}
+                  onChangeText={(text) => setStudentInput(text)}
+                  onSubmitEditing={() => {
+                    if (studentInput) {
+                      setStudents([...students, studentInput]);
+                      setStudentInput('');
+                    }
+                  }}
+                  placeholder="Student Name"
+                />
+                <View style={{marginVertical: 10}} />
+                <PrimaryButton
+                  disabled={studentInput === ''}
+                  onPress={() => {
+                    if (studentInput) {
+                      setStudents([...students, studentInput]);
+                      setStudentInput('');
+                    }
+                  }}
+                  text={'Add Student'}
+                />
+              </View>
+              {/* <View style={{paddingVertical: 10}}>
                 <View style={style.checkboxHolder}>
                   <Checkbox
                     value={hostControlCheckbox}
@@ -155,28 +198,29 @@ const Create = () => {
                 ) : (
                   <></>
                 )}
-              </View>
-              <PrimaryButton
-                disabled={roomTitle === '' || loading}
-                onPress={() => createRoom()}
-                text={loading ? 'Loading...' : 'Create Meeting'}
-              />
+              </View> */}
               <HorizontalRule />
-              <SecondaryButton
-                onPress={() => history.push('/join')}
-                text={'Have a Meeting ID?'}
+              <PrimaryButton
+                disabled={teacherName === '' || students.length === 0}
+                onPress={() => createRoom()}
+                text={'Create Exam'}
               />
+              {/* <SecondaryButton
+                onPress={() => history.push('/join')}
+                text={'Have a ID?'}
+              /> */}
             </View>
           </View>
         </View>
       ) : (
         <Share
-          urlView={urlView}
-          urlHost={urlHost}
-          pstn={pstn}
-          hostControlCheckbox={hostControlCheckbox}
-          joinPhrase={joinPhrase}
-          roomTitle={roomTitle}
+          // urlView={urlView}
+          // urlHost={urlHost}
+          // pstn={pstn}
+          // hostControlCheckbox={hostControlCheckbox}
+          // joinPhrase={joinPhrase}
+          teacherName={teacherName}
+          students={students}
         />
       )}
     </View>
@@ -223,6 +267,13 @@ const style = StyleSheet.create({
     textAlign: 'center',
     color: $config.PRIMARY_FONT_COLOR,
     marginBottom: 40,
+  },
+  heading2: {
+    fontSize: 22,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: $config.PRIMARY_FONT_COLOR,
+    marginBottom: 5,
   },
   inputs: {
     flex: 1,
