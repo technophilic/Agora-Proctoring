@@ -35,6 +35,8 @@ export type ActionType<T extends keyof CallbacksInterface> = ActionInterface<
 export interface RtcContextInterface {
   RtcEngine: RtcEngine;
   dispatch: DispatchType<keyof CallbacksInterface>;
+  uidRef: React.MutableRefObject<number>;
+  hasJoinedChannel: boolean;
   setDualStreamMode: React.Dispatch<React.SetStateAction<DualStreamMode>>;
 }
 

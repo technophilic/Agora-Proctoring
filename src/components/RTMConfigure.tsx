@@ -32,7 +32,7 @@ export enum UserType {
 const RtmConfigure = (props: any) => {
   const {setRecordingActive, callActive, name} = props;
   const {rtcProps} = useContext(PropsContext);
-  const {dispatch} = useContext(RtcContext);
+  const {dispatch, uidRef, hasJoinedChannel, RtcEngine} = useContext(RtcContext);
   const [messageStore, setMessageStore] = useState<messageStoreInterface[]>([]);
   const [privateMessageStore, setPrivateMessageStore] = useState({});
   const {whiteboardActive, joinWhiteboardRoom, leaveWhiteboardRoom} =
@@ -71,8 +71,8 @@ const RtmConfigure = (props: any) => {
 
   const init = async () => {
     engine.current = new RtmEngine();
-    rtcProps.uid
-      ? (localUid.current = rtcProps.uid + '')
+    uidRef.current
+      ? (localUid.current = uidRef.current + '')
       : (localUid.current = '' + new Date().getTime());
     engine.current.on('error', (evt: any) => {
       // console.log(evt);
@@ -186,7 +186,7 @@ const RtmConfigure = (props: any) => {
       if (ts === 0) {
         ts = new Date().getTime();
       }
-      if (channelId === rtcProps.channel) {
+      if (channelId === RtcEngine.teacher) {
         if (text[0] === mType.Control) {
           console.log('Control: ', text);
           if (text.slice(1) === controlMessageEnum.muteVideo) {
@@ -222,16 +222,16 @@ const RtmConfigure = (props: any) => {
     });
     engine.current.createClient(rtcProps.appId);
     await engine.current.login({
-      uid: localUid.current,
-      token: rtcProps.rtm,
+      uid: uidRef.current + '',
+      // token: rtcProps.rtm,
     });
     await engine.current.setLocalUserAttributes([
       {key: 'name', value: name || 'User'},
       {key: 'screenUid', value: String(rtcProps.screenShareUid)},
     ]);
-    await engine.current.joinChannel(rtcProps.channel);
+    await engine.current.joinChannel(RtcEngine.teacher);
     engine.current
-      .getChannelMembersBychannelId(rtcProps.channel)
+      .getChannelMembersBychannelId(RtcEngine.teacher)
       .then((data) => {
         data.members.map(async (member: any) => {
           const backoffAttributes = backOff(
@@ -291,7 +291,7 @@ const RtmConfigure = (props: any) => {
   const sendMessage = async (msg: string) => {
     if (msg !== '') {
       await (engine.current as RtmEngine).sendMessageByChannelId(
-        rtcProps.channel,
+        RtcEngine.teacher,
         mType.Normal + msg,
       );
     }
@@ -320,7 +320,7 @@ const RtmConfigure = (props: any) => {
   };
   const sendControlMessage = async (msg: string) => {
     await (engine.current as RtmEngine).sendMessageByChannelId(
-      rtcProps.channel,
+      RtcEngine.teacher,
       mType.Control + msg,
     );
   };
@@ -355,12 +355,14 @@ const RtmConfigure = (props: any) => {
   };
 
   useEffect(() => {
-    callActive ? init() : (console.log('waiting to init RTM'), setLogin(true));
+    callActive && hasJoinedChannel
+      ? init()
+      : (console.log('waiting to init RTM'), setLogin(true));
     return () => {
       end();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rtcProps.channel, rtcProps.appId, callActive]);
+  }, [RtcEngine.teacher, rtcProps.appId, callActive, hasJoinedChannel]);
 
   return (
     <ChatContext.Provider

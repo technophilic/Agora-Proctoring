@@ -224,6 +224,7 @@ const VideoCall: React.FC = () => {
   let rtcProps = {
     appId: $config.APP_ID,
     channel: role === Role.Teacher ? teacher : students[0],
+    teacherChannel: teacher,
     uid: null,
     token: null,
     rtm: null,

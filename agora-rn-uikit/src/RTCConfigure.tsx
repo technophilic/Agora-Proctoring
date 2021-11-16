@@ -44,6 +44,8 @@ const initialState: UidStateInterface = {
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   const [ready, setReady] = useState<boolean>(false);
+  const [hasJoinedChannel, setHasJoinedChannel] = useState<boolean>(false);
+  let uid = useRef<number>(0);
   useDebugValue(ready, (ready) => `ready to join ${String(ready)}`);
   let joinRes: ((arg0: boolean) => void) | null = null;
   let canJoin = useRef(new Promise<boolean | void>((res) => (joinRes = res)));
@@ -374,6 +376,8 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
         engine.current.addListener('JoinChannelSuccess', async (...args) => {
           //Get current peer IDs
+          uid.current = args[0];
+          setHasJoinedChannel(true);
           (dispatch as DispatchType<'JoinChannelSuccess'>)({
             type: 'JoinChannelSuccess',
             value: args,
@@ -463,7 +467,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         if(uidState.max[0].video){
           await engine.current.muteLocalVideoStream(true);
         }
-        
         await engine.current.joinChannel(
           rtcProps.token || null,
           rtcProps.channel,
@@ -499,6 +502,8 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       value={{
         RtcEngine: engine.current as RtcEngine,
         dispatch,
+        uidRef: uid,
+        hasJoinedChannel,
         setDualStreamMode,
       }}>
       <MaxUidProvider value={uidState.max}>

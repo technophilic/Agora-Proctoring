@@ -140,6 +140,7 @@ AgoraRTC.setArea({
 });
 
 export default class RtcEngine {
+  public uid: number | string;
   public appId: string;
   // public AgoraRTC: any;
   public client: IAgoraRTCClient;
@@ -288,7 +289,9 @@ export default class RtcEngine {
 
           if (this.isPublished === false) {
             this.isPublished = true;
-            (this.eventsMap.get('JoinChannelSuccess') as callbackType)();
+            (this.eventsMap.get('JoinChannelSuccess') as callbackType)(
+              this.uid,
+            );
           }
         }
       } catch (e) {
@@ -414,7 +417,7 @@ export default class RtcEngine {
     this.client.on('stream-type-changed', function (uid, streamType) {
       console.log('[fallback]: ', uid, streamType);
     });
-    await this.client.join(
+    this.uid = await this.client.join(
       this.appId,
       channelName,
       token || null,
