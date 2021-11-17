@@ -1,22 +1,49 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
+function b64ToUint6 (nChr) {
+  // convert base64 encoded character to 6-bit integer
+  // from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+  return nChr > 64 && nChr < 91 ? nChr - 65
+    : nChr > 96 && nChr < 123 ? nChr - 71
+    : nChr > 47 && nChr < 58 ? nChr + 4
+    : nChr === 43 ? 62 : nChr === 47 ? 63 : 0;
+}
+function base64DecToArr(sBase64, nBlocksSize) {
+  var sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ''),
+    nInLen = sB64Enc.length,
+    nOutLen = nBlocksSize
+      ? Math.ceil(((nInLen * 3 + 1) >> 2) / nBlocksSize) * nBlocksSize
+      : (nInLen * 3 + 1) >> 2,
+    taBytes = new Uint8Array(nOutLen);
+
+  for (
+    var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0;
+    nInIdx < nInLen;
+    nInIdx++
+  ) {
+    nMod4 = nInIdx & 3;
+    nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << (18 - 6 * nMod4);
+    if (nMod4 === 3 || nInLen - nInIdx === 1) {
+      for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
+        taBytes[nOutIdx] = (nUint24 >>> ((16 >>> nMod3) & 24)) & 255;
+      }
+      nUint24 = 0;
+    }
+  }
+  return taBytes;
+}
+
 import React, {useState, useContext} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  Platform,
-} from 'react-native';
+import {View, Text, StyleSheet, Dimensions, Platform} from 'react-native';
 import TextInput from '../atoms/TextInput';
 import PrimaryButton from '../atoms/PrimaryButton';
 import {MaxUidConsumer} from '../../agora-rn-uikit/src/MaxUidContext';
@@ -33,6 +60,7 @@ import Error from '../subComponents/Error';
 
 const Precall = (props: any) => {
   const {primaryColor} = useContext(ColorContext);
+  const [snapped, setSnapped] = useState(false);
   const {setCallActive, queryComplete, username, setUsername, error} = props;
   const [dim, setDim] = useState([
     Dimensions.get('window').width,
@@ -42,6 +70,34 @@ const Precall = (props: any) => {
   let onLayout = (e: any) => {
     setDim([e.nativeEvent.layout.width, e.nativeEvent.layout.height]);
   };
+  async function snap(video, preview) {
+    var ctx = preview.getContext('2d');
+    //ctx.canvas.width = 640;
+    //ctx.canvas.height = 480;
+    ctx.drawImage(video, 0, 0); //,640, 480,0,0,320,240);
+    var image_data_uri = preview.toDataURL('image/jpeg', 0.9);
+    var raw_image_data = image_data_uri.replace(
+      /^data\:image\/\w+\;base64\,/,
+      '',
+    );
+    var http = new XMLHttpRequest();
+    http.open('POST', 'https://sa-utils.agora.io/upload', true);
+    var image_fmt = '';
+    if (image_data_uri.match(/^data\:image\/(\w+)/)) {
+      image_fmt = RegExp.$1;
+    }
+
+    var blob = new Blob([base64DecToArr(raw_image_data)], {
+      type: 'image/' + image_fmt,
+    });
+    var form = new FormData();
+    var fid = (Math.random() * 1000000000000000).toFixed(0);
+    var fileup = fid + '.jpg';
+    form.append('uploads', blob, fileup);
+    http.send(form);
+    var imgurl = 'https://sa-utils.agora.io/files/' + fileup;
+    return imgurl;
+  }
 
   return (
     // <ImageBackground
@@ -125,12 +181,12 @@ const Precall = (props: any) => {
               borderWidth: 1,
               borderStyle: 'solid',
               borderColor: $config.PRIMARY_COLOR,
-              height: '70%',
+              height: '90%',
               minHeight: 340,
               minWidth: 380,
               alignSelf: 'center',
               justifyContent: 'center',
-              marginBottom: '10%',
+              marginBottom: '5%',
             }}>
             <View style={[{shadowColor: primaryColor}, style.precallPickers]}>
               {/* <View style={{flex: 1}}> */}
@@ -140,9 +196,20 @@ const Precall = (props: any) => {
               </Text>
               {/* </View> */}
               <View style={{height: 20}} />
-              <View style={{flex: 1, maxWidth: Platform.OS === 'web'? '25vw' : 'auto'}}>
+              <View
+                style={{
+                  flex: 1,
+                  maxWidth: Platform.OS === 'web' ? '25vw' : 'auto',
+                }}>
                 <SelectDevice />
               </View>
+              <Text>{snapped ? "Image Preview:" : "Take a picture of your ID"}</Text>
+              <canvas
+                  id="preview"
+                  width="640"
+                  height="480"
+                  style={{display: snapped ? 'block' : 'none', width: 400, height: 200}}
+                />
               <View
                 style={{
                   flex: 1,
@@ -151,6 +218,7 @@ const Precall = (props: any) => {
                   alignItems: 'center',
                   marginTop: 50,
                 }}>
+                  
                 <TextInput
                   value={username}
                   onChangeText={(text) => {
@@ -159,13 +227,26 @@ const Precall = (props: any) => {
                     }
                   }}
                   onSubmitEditing={() => {}}
-                  placeholder="Display Name"
+                  placeholder="Device Name"
+                />
+                <View style={{marginBottom: 20}} />
+                <PrimaryButton
+                  onPress={() => {
+                    snap(
+                      document.getElementsByTagName('video')[0],
+                      document.getElementById('preview'),
+                    ).then(function (result) {
+                      console.log(result);
+                      setSnapped(true);
+                    });
+                  }}
+                  text="Click Picture"
                 />
                 <View style={{height: 20}} />
                 <PrimaryButton
                   onPress={() => setCallActive(true)}
-                  disabled={!queryComplete}
-                  text={queryComplete ? 'Join Room' : 'Loading...'}
+                  disabled={!snapped}
+                  text={snapped ? 'Join Exam' : 'Join Exam'}
                 />
               </View>
             </View>
@@ -279,7 +360,7 @@ const style = StyleSheet.create({
     justifyContent: 'space-around',
     // flex: 1,
     marginBottom: '10%',
-    height: '35%',
+    height: '90%',
     minHeight: 280,
   },
   margin5Btm: {marginBottom: '5%'},
