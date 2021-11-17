@@ -66,6 +66,7 @@ const useChatNotification = (
 };
 
 const NotificationControl = ({children, chatDisplayed, setSidePanel}) => {
+  const role = useRole();
   const {messageStore, privateMessageStore, userList, localUid} =
     useContext(ChatContext);
   const [
@@ -115,7 +116,8 @@ const NotificationControl = ({children, chatDisplayed, setSidePanel}) => {
   useEffect(() => {
     if (
       messageStore.length !== 0 &&
-      messageStore[messageStore.length - 1]?.uid !== localUid
+      messageStore[messageStore.length - 1]?.uid !== localUid &&
+      role === Role.Teacher
     ) {
       Toast.show({
         text1:
@@ -191,7 +193,7 @@ function useQuery() {
   return React.useMemo(() => new URLSearchParams(search), [search]);
 }
 
-function useChannelInfo() {
+export function useChannelInfo() {
   const params = useQuery();
   const role = useRole();
   let students: string[];

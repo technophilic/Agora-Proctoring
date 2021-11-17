@@ -18,6 +18,8 @@ import {messageStoreInterface} from './ChatContext';
 import {Platform} from 'react-native';
 import {backOff} from 'exponential-backoff';
 import {whiteboardContext} from './WhiteboardConfigure';
+import {Role} from '../../bridge/rtc/webNg/Types';
+import {useRole, useChannelInfo} from '../../src/pages/VideoCall';
 
 export enum mType {
   Control = '0',
@@ -35,11 +37,13 @@ const RtmConfigure = (props: any) => {
   const {dispatch, uidRef, hasJoinedChannel, RtcEngine} = useContext(RtcContext);
   const [messageStore, setMessageStore] = useState<messageStoreInterface[]>([]);
   const [privateMessageStore, setPrivateMessageStore] = useState({});
+  const [teacher, students] = useChannelInfo();
   const {whiteboardActive, joinWhiteboardRoom, leaveWhiteboardRoom} =
     useContext(whiteboardContext);
   const [login, setLogin] = useState<boolean>(false);
   const [userList, setUserList] = useState({});
   let engine = useRef<RtmEngine>(null!);
+  const role = useRole();
   let localUid = useRef<string>('');
   const addMessageToStore = (uid: string, text: string, ts: string) => {
     setMessageStore((m: messageStoreInterface[]) => {
@@ -47,28 +51,32 @@ const RtmConfigure = (props: any) => {
     });
   };
 
-
   useEffect(() => {
-    function processEvent(evt: string) {
-      console.log('BrowserChangeAlert  ', evt);
-      sendMessage(name + ' - BrowserChangeAlert: ' + evt);
+    console.log('!!!', name, role, students[0]);
+    if (login) {
+      function processEvent(evt: string) {
+        if (role === Role.Student) {
+          sendMessage(students[0] + ' - BrowserChangeAlert: ' + evt);
+        }
+      }
+      function facesDetected(evt: string) {
+        if (role === Role.Student) {
+          sendMessage(students[0] + ' - Faces Detected count= ' + evt);
+        }
+      }
+      if (window?.AgoraProctorUtils) {
+        window.AgoraProctorUtils.init();
+        window.AgoraProctorUtilEvents.on(
+          AgoraProctorUtils.BrowserChangeAlert,
+          processEvent,
+        );
+        window.AgoraProctorUtilEvents.on(
+          AgoraProctorUtils.FaceDetected,
+          facesDetected,
+        );
+      }
     }
-    function facesDetected(evt: string) {
-      console.log('Faces Detected count=' + evt);
-      sendMessage(name + ' - Faces Detected count= ' + evt);
-    }
-    if (window?.AgoraProctorUtils) {
-      window.AgoraProctorUtils.init();
-      window.AgoraProctorUtilEvents.on(
-        AgoraProctorUtils.BrowserChangeAlert,
-        processEvent,
-      );
-      window.AgoraProctorUtilEvents.on(
-        AgoraProctorUtils.FaceDetected,
-        facesDetected,
-      );
-    }
-  }, []);
+  }, [login]);
 
   const addMessageToPrivateStore = (
     uid: string,
