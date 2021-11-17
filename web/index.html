@@ -8,6 +8,12 @@
     <title><%= htmlWebpackPlugin.options.title %></title>
 </head>
 <body>
+    <script src="https://sa-utils.agora.io/agora-proctor/utils/AgoraProctorUtils.js" type="module"></script>
+    <script type="module">
+        import { AgoraProctorUtils, AgoraProctorUtilEvents } from "https://sa-utils.agora.io/agora-proctor/utils/AgoraProctorUtils.js";
+        window.AgoraProctorUtils = AgoraProctorUtils;
+        window.AgoraProctorUtilEvents = AgoraProctorUtilEvents;
+    </script>
     <style>
         /* .video-container > *{
             background-color: #000 !important;

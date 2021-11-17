@@ -1,12 +1,12 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useState, useContext, useEffect} from 'react';
@@ -27,8 +27,11 @@ import ScreenshareButton from '../subComponents/ScreenshareButton';
 import {controlsHolder} from '../../theme.json';
 import mobileAndTabletCheck from '../utils/mobileWebTest';
 import WhiteboardButton from '../subComponents/WhiteboardButton';
+import {useRole} from '../../src/pages/VideoCall';
+import {Role} from '../../bridge/rtc/webNg/Types';
 
 const Controls = (props: any) => {
+  const role = useRole();
   let onLayout = (e: any) => {
     setDim([e.nativeEvent.layout.width, e.nativeEvent.layout.height]);
   };
@@ -67,9 +70,10 @@ const Controls = (props: any) => {
           },
         ]}
         onLayout={onLayout}>
-        <View style={{alignSelf: 'center'}}>
-          <LocalAudioMute />
-          {/* <Text
+        {role === Role.Teacher && (
+          <View style={{alignSelf: 'center'}}>
+            <LocalAudioMute />
+            {/* <Text
             style={{
               textAlign: 'center',
               marginTop: 5,
@@ -77,10 +81,12 @@ const Controls = (props: any) => {
             }}>
             Audio
           </Text> */}
-        </View>
-        <View style={{alignSelf: 'center'}}>
-          <LocalVideoMute />
-          {/* <Text
+          </View>
+        )}
+        {role === Role.Teacher && (
+          <View style={{alignSelf: 'center'}}>
+            <LocalVideoMute />
+            {/* <Text
             style={{
               textAlign: 'center',
               marginTop: 5,
@@ -88,7 +94,8 @@ const Controls = (props: any) => {
             }}>
             Video
           </Text> */}
-        </View>
+          </View>
+        )}
         {mobileAndTabletCheck() ? (
           <View style={{alignSelf: 'center'}}>
             <SwitchCamera />
@@ -104,14 +111,14 @@ const Controls = (props: any) => {
         ) : (
           <></>
         )}
-        {!mobileAndTabletCheck() && isHost ? (
+        {!mobileAndTabletCheck() && isHost && role === Role.Teacher ? (
           <View style={{alignSelf: 'center'}}>
             <WhiteboardButton setLayout={setLayout} />
           </View>
         ) : (
           <></>
         )}
-        {$config.SCREEN_SHARING ? (
+        {$config.SCREEN_SHARING && role === Role.Teacher ? (
           !mobileAndTabletCheck() ? (
             <View style={{alignSelf: 'center'}}>
               <ScreenshareButton
