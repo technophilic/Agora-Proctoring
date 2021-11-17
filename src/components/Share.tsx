@@ -50,7 +50,8 @@ const Share = (props: {teacherName: string; students: string[]}) => {
     students.map((student) => student).join(',');
   const enterMeeting = () => {
     if (proctorUrl) {
-      history.push(`/${proctorUrl}`);
+      window.open(window.location.origin + '/' + proctorUrl, '_blank');
+      // history.push(`/${proctorUrl}`);
     }
   };
 
@@ -115,6 +116,7 @@ const Share = (props: {teacherName: string; students: string[]}) => {
                     ? `${window.location.origin}/${proctorUrl}`
                     : proctorUrl
                 }
+                target="_blank"
                 style={{
                   color: $config.PRIMARY_FONT_COLOR,
                   fontSize: 16,
@@ -177,6 +179,7 @@ const Share = (props: {teacherName: string; students: string[]}) => {
                         ? `${window.location.origin}/exam?teacher=${teacherName}&student=${student}`
                         : proctorUrl
                     }
+                    target="_blank"
                     style={{
                       color: $config.PRIMARY_FONT_COLOR,
                       fontSize: 16,

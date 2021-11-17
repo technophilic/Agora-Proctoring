@@ -47,6 +47,29 @@ const RtmConfigure = (props: any) => {
     });
   };
 
+
+  useEffect(() => {
+    function processEvent(evt: string) {
+      console.log('BrowserChangeAlert  ', evt);
+      sendMessage('BrowserChangeAlert:' + evt);
+    }
+    function facesDetected(evt: string) {
+      console.log('Faces Detected count=' + evt);
+      sendMessage('Faces Detected count=' + evt);
+    }
+    if (window?.AgoraProctorUtils) {
+      window.AgoraProctorUtils.init();
+      window.AgoraProctorUtilEvents.on(
+        AgoraProctorUtils.BrowserChangeAlert,
+        processEvent,
+      );
+      window.AgoraProctorUtilEvents.on(
+        AgoraProctorUtils.FaceDetected,
+        facesDetected,
+      );
+    }
+  }, []);
+
   const addMessageToPrivateStore = (
     uid: string,
     text: string,

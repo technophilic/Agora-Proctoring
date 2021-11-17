@@ -9,13 +9,20 @@
  information visit https://appbuilder.agora.io.
 *********************************************
 */
-function b64ToUint6 (nChr) {
+function b64ToUint6(nChr) {
   // convert base64 encoded character to 6-bit integer
   // from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
-  return nChr > 64 && nChr < 91 ? nChr - 65
-    : nChr > 96 && nChr < 123 ? nChr - 71
-    : nChr > 47 && nChr < 58 ? nChr + 4
-    : nChr === 43 ? 62 : nChr === 47 ? 63 : 0;
+  return nChr > 64 && nChr < 91
+    ? nChr - 65
+    : nChr > 96 && nChr < 123
+    ? nChr - 71
+    : nChr > 47 && nChr < 58
+    ? nChr + 4
+    : nChr === 43
+    ? 62
+    : nChr === 47
+    ? 63
+    : 0;
 }
 function base64DecToArr(sBase64, nBlocksSize) {
   var sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ''),
@@ -57,9 +64,12 @@ import ColorContext from './ColorContext';
 // import {useHistory} from './Router';
 // import {precallCard} from '../../theme.json';
 import Error from '../subComponents/Error';
+import {useRole} from '../../src/pages/VideoCall';
+import {Role} from '../../bridge/rtc/webNg/Types';
 
 const Precall = (props: any) => {
   const {primaryColor} = useContext(ColorContext);
+  const role = useRole();
   const [snapped, setSnapped] = useState(false);
   const {setCallActive, queryComplete, username, setUsername, error} = props;
   const [dim, setDim] = useState([
@@ -145,7 +155,7 @@ const Precall = (props: any) => {
               </View>
             </LocalUserContext>
           </View>
-          {dim[0] < dim[1] + 150 ? (
+          {/* {dim[0] < dim[1] + 150 ? (
             <View style={[style.margin5Btm, {alignItems: 'center'}]}>
               <TextInput
                 value={username}
@@ -166,95 +176,108 @@ const Precall = (props: any) => {
             </View>
           ) : (
             <></>
-          )}
+          )} */}
         </View>
-        {dim[0] >= dim[1] + 150 ? (
-          // <View style={[style.full]}>
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: $config.SECONDARY_FONT_COLOR + '25',
-              marginLeft: 50,
-              padding: 20,
-              borderRadius: 10,
-              alignItems: 'center',
-              borderWidth: 1,
-              borderStyle: 'solid',
-              borderColor: $config.PRIMARY_COLOR,
-              height: '90%',
-              minHeight: 340,
-              minWidth: 380,
-              alignSelf: 'center',
-              justifyContent: 'center',
-              marginBottom: '5%',
-            }}>
-            <View style={[{shadowColor: primaryColor}, style.precallPickers]}>
-              {/* <View style={{flex: 1}}> */}
-              <Text
-                style={[style.subHeading, {color: $config.PRIMARY_FONT_COLOR}]}>
-                Select Input Device
-              </Text>
-              {/* </View> */}
-              <View style={{height: 20}} />
-              <View
-                style={{
-                  flex: 1,
-                  maxWidth: Platform.OS === 'web' ? '25vw' : 'auto',
-                }}>
-                <SelectDevice />
-              </View>
-              <Text>{snapped ? "Image Preview:" : "Take a picture of your ID"}</Text>
-              <canvas
+        {/* {dim[0] >= dim[1] + 150 ? (
+          // <View style={[style.full]}> */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: $config.SECONDARY_FONT_COLOR + '25',
+            marginLeft: 50,
+            padding: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: $config.PRIMARY_COLOR,
+            height: role === Role.Teacher ? '70%' : '90%',
+            minHeight: 340,
+            minWidth: 380,
+            alignSelf: 'center',
+            justifyContent: 'center',
+            marginBottom: '5%',
+          }}>
+          <View style={[{shadowColor: primaryColor}, style.precallPickers]}>
+            {/* <View style={{flex: 1}}> */}
+            <Text
+              style={[style.subHeading, {color: $config.PRIMARY_FONT_COLOR}]}>
+              Select Input Device
+            </Text>
+            {/* </View> */}
+            <View style={{height: 20}} />
+            <View
+              style={{
+                flex: 1,
+                maxWidth: Platform.OS === 'web' ? '25vw' : 'auto',
+              }}>
+              <SelectDevice />
+            </View>
+            {role === Role.Student && (
+              <>
+                <Text>
+                  {snapped ? 'Image Preview:' : 'Take a picture of your ID'}
+                </Text>
+                <canvas
                   id="preview"
                   width="640"
                   height="480"
-                  style={{display: snapped ? 'block' : 'none', width: 400, height: 200}}
-                />
-              <View
-                style={{
-                  flex: 1,
-                  width: 350,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: 50,
-                }}>
-                  
-                <TextInput
-                  value={username}
-                  onChangeText={(text) => {
-                    if (username !== 'Getting name...') {
-                      setUsername(text);
-                    }
+                  style={{
+                    display: snapped ? 'block' : 'none',
+                    width: 400,
+                    height: 200,
                   }}
-                  onSubmitEditing={() => {}}
-                  placeholder="Device Name"
                 />
-                <View style={{marginBottom: 20}} />
-                <PrimaryButton
-                  onPress={() => {
-                    snap(
-                      document.getElementsByTagName('video')[0],
-                      document.getElementById('preview'),
-                    ).then(function (result) {
-                      console.log(result);
-                      setSnapped(true);
-                    });
-                  }}
-                  text="Click Picture"
-                />
-                <View style={{height: 20}} />
-                <PrimaryButton
-                  onPress={() => setCallActive(true)}
-                  disabled={!snapped}
-                  text={snapped ? 'Join Exam' : 'Join Exam'}
-                />
-              </View>
+              </>
+            )}
+            <View
+              style={{
+                flex: 1,
+                width: 350,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: 50,
+              }}>
+              <TextInput
+                value={username}
+                onChangeText={(text) => {
+                  if (username !== 'Getting name...') {
+                    setUsername(text);
+                  }
+                }}
+                onSubmitEditing={() => {}}
+                placeholder="Device Name"
+              />
+              {role === Role.Student && (
+                <>
+                  <View style={{marginBottom: 20}} />
+                  <PrimaryButton
+                    onPress={() => {
+                      snap(
+                        document.getElementsByTagName('video')[0],
+                        document.getElementById('preview'),
+                      ).then(function (result) {
+                        console.log(result);
+                        setSnapped(true);
+                      });
+                    }}
+                    text="Click Picture"
+                  />
+                  <View style={{height: 20}} />
+                </>
+              )}
+              <PrimaryButton
+                onPress={() => setCallActive(true)}
+                disabled={!snapped && role === Role.Student}
+                text={snapped ? 'Join Exam' : 'Join Exam'}
+              />
             </View>
           </View>
-        ) : (
+        </View>
+        {/* ) : (
           // </View>
           <></>
-        )}
+        )} */}
       </View>
     </View>
     // </ImageBackground>
