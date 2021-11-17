@@ -173,7 +173,7 @@ enum RnEncryptionEnum {
   SM4128ECB = 4,
 }
 
-function useRole() {
+export function useRole() {
   const {phrase} = useParams<{phrase: string}>();
   return React.useMemo(
     () =>
@@ -206,11 +206,37 @@ const VideoCall: React.FC = () => {
   // const {store} = useContext(StorageContext);
   const [username, setUsername] = useState('');
   const [callActive, setCallActive] = useState($config.PRECALL ? false : true);
-  const [layout, setLayout] = useState(Layout.Grid);
+  const [layout, sl] = useState(Layout.Pinned);
   const [recordingActive, setRecordingActive] = useState(false);
   const [queryComplete, setQueryComplete] = useState(true);
   const [sidePanel, setSidePanel] = useState<SidePanelType>(SidePanelType.None);
   const role = useRole();
+  const setLayout = (param) => {
+    if (role === Role.Teacher) {
+      sl(param);
+    }
+  };
+
+  useEffect(() => {
+    function processEvent(evt) {
+      console.log('BrowserChangeAlert  ', evt);
+    }
+    function facesDetected(evt) {
+      console.log('Faces Detected count=' + evt);
+    }
+    if (window?.AgoraProctorUtils) {
+      window.AgoraProctorUtils.init();
+      window.AgoraProctorUtilEvents.on(
+        AgoraProctorUtils.BrowserChangeAlert,
+        processEvent,
+      );
+      window.AgoraProctorUtilEvents.on(
+        AgoraProctorUtils.FaceDetected,
+        facesDetected,
+      );
+    }
+  });
+
   const [teacher, students] = useChannelInfo();
   const history = useHistory();
   // const {phrase} = useParams();
@@ -353,7 +379,7 @@ const VideoCall: React.FC = () => {
                                 <></>
                               ) : (
                                 <Controls
-                                  setLayout={setLayout}
+                                  setLayout={sl}
                                   recordingActive={recordingActive}
                                   setRecordingActive={setRecordingActive}
                                   // chatDisplayed={chatDisplayed}
