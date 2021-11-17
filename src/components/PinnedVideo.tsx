@@ -28,7 +28,8 @@ import ColorContext from './ColorContext';
 import icons from '../assets/icons';
 import {layoutProps} from '../../theme.json';
 import FallbackLogo from '../subComponents/FallbackLogo';
-
+import {useRole} from '../pages/VideoCall';
+import {Role} from '../../bridge/rtc/webNg/Types';
 import {whiteboardContext} from './WhiteboardConfigure';
 import WhiteboarView from './WhiteboardView';
 
@@ -53,7 +54,10 @@ const PinnedVideo = () => {
   const {userList, localUid} = useContext(chatContext);
 
   // Whiteboard
-  const {whiteboardActive} = useContext(whiteboardContext);
+  const role = useRole();
+  const whiteboard = useContext(whiteboardContext);
+  const whiteboardActive =
+    role === Role.Teacher ? false : whiteboard.whiteboardActive;
 
   return (
     <View

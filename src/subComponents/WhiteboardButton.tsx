@@ -19,6 +19,8 @@ import {whiteboardContext} from '../components/WhiteboardConfigure';
 
 // import RtcEngine from 'react-native-agora';
 import ChatContext, {controlMessageEnum} from '../components/ChatContext';
+import {useRole} from '../pages/VideoCall';
+import {Role} from '../../bridge/rtc/webNg/Types';
 
 const WhiteboardButton = ({setLayout}) => {
   const {primaryColor} = useContext(ColorContext);
@@ -26,11 +28,13 @@ const WhiteboardButton = ({setLayout}) => {
     useContext(whiteboardContext);
   const {engine, sendControlMessage, updateWbUserAttribute} =
     useContext(ChatContext);
-
+  const role = useRole();
   useEffect(() => {
     if (engine) {
       if (whiteboardActive) {
-        setLayout(Layout.Pinned);
+        if (role === Role.Student) {
+          setLayout(Layout.Pinned);
+        }
         updateWbUserAttribute('active');
       } else {
         updateWbUserAttribute('inactive');

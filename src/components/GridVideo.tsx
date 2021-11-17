@@ -1,12 +1,12 @@
 /*
 ********************************************
  Copyright © 2021 Agora Lab, Inc., all rights reserved.
- AppBuilder and all associated components, source code, APIs, services, and documentation 
- (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be 
- accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.  
- Use without a license or in violation of any license terms and conditions (including use for 
- any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more 
- information visit https://appbuilder.agora.io. 
+ AppBuilder and all associated components, source code, APIs, services, and documentation
+ (the “Materials”) are owned by Agora Lab, Inc. and its licensors. The Materials may not be
+ accessed, used, modified, or distributed for any purpose without a license from Agora Lab, Inc.
+ Use without a license or in violation of any license terms and conditions (including use for
+ any purpose competitive to Agora Lab, Inc.’s business) is strictly prohibited. For more
+ information visit https://appbuilder.agora.io.
 *********************************************
 */
 import React, {useMemo, useContext, useState, useEffect} from 'react';
@@ -35,6 +35,8 @@ import RtcContext, {
 import WhiteboardView from './WhiteboardView';
 import {whiteboardContext} from './WhiteboardConfigure';
 import {RoomPhase} from 'white-web-sdk';
+import {useRole} from '../pages/VideoCall';
+import {Role} from '../../bridge/rtc/webNg/Types';
 
 const layout = (len: number, isDesktop: boolean = true) => {
   const rows = Math.round(Math.sqrt(len));
@@ -64,8 +66,10 @@ const GridVideo = (props: GridVideoProps) => {
   const {dispatch} = useContext(RtcContext);
   const max = useContext(MaxUidContext);
   const min = useContext(MinUidContext);
-
-  const {whiteboardActive} = useContext(whiteboardContext);
+  const role = useRole();
+  const whiteboard = useContext(whiteboardContext);
+  const whiteboardActive =
+    role === Role.Teacher ? false : whiteboard.whiteboardActive;
   const wb: UidInterface = {
     uid: 'whiteboard',
     audio: false,
@@ -75,7 +79,7 @@ const GridVideo = (props: GridVideoProps) => {
 
   const {primaryColor} = useContext(ColorContext);
   const {userList, localUid} = useContext(chatContext);
-  // Whiteboard: Add an extra user with uid as whiteboard to intercept 
+  // Whiteboard: Add an extra user with uid as whiteboard to intercept
   // later and replace with whiteboardView
   const users = [...max, ...min, wb];
   let onLayout = (e: any) => {
@@ -97,8 +101,7 @@ const GridVideo = (props: GridVideoProps) => {
   return (
     <View
       style={[style.full, {paddingHorizontal: isDesktop ? 50 : 0}]}
-      onLayout={onLayout}
-    >
+      onLayout={onLayout}>
       {matrix.map((r, ridx) => (
         <View style={style.gridRow} key={ridx}>
           {r.map((c, cidx) => {
@@ -112,8 +115,7 @@ const GridVideo = (props: GridVideoProps) => {
                     flex: Platform.OS === 'web' ? 1 / dims.c : 1,
                     marginHorizontal: 'auto',
                   }}
-                  key={cidx}
-                >
+                  key={cidx}>
                   <View style={style.gridVideoContainerInner}>
                     <WhiteboardView />
                   </View>
@@ -134,8 +136,7 @@ const GridVideo = (props: GridVideoProps) => {
                   flex: Platform.OS === 'web' ? 1 / dims.c : 1,
                   marginHorizontal: 'auto',
                 }}
-                key={cidx}
-              >
+                key={cidx}>
                 <View style={style.gridVideoContainerInner}>
                   <MaxVideoView
                     fallback={() => {
@@ -165,8 +166,7 @@ const GridVideo = (props: GridVideoProps) => {
                       // alignContent: 'flex-end',
                       // width: '100%',
                       // alignItems: 'flex-start',
-                    }}
-                  >
+                    }}>
                     {/* <View style={{alignSelf: 'flex-end', flexDirection: 'row'}}> */}
                     <View style={[style.MicBackdrop]}>
                       <Image
@@ -196,8 +196,7 @@ const GridVideo = (props: GridVideoProps) => {
                         // width: '100%',
                         // alignSelf: 'stretch',
                         // textAlign: 'center',
-                      }}
-                    >
+                      }}>
                       {users[ridx * dims.c + cidx].uid === 'local'
                         ? userList[localUid]
                           ? userList[localUid].name.slice(0, 20) + ' '
