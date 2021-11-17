@@ -216,6 +216,27 @@ const VideoCall: React.FC = () => {
       sl(param);
     }
   };
+
+  useEffect(() => {
+    function processEvent(evt) {
+      console.log('BrowserChangeAlert  ', evt);
+    }
+    function facesDetected(evt) {
+      console.log('Faces Detected count=' + evt);
+    }
+    if (window?.AgoraProctorUtils) {
+      window.AgoraProctorUtils.init();
+      window.AgoraProctorUtilEvents.on(
+        AgoraProctorUtils.BrowserChangeAlert,
+        processEvent,
+      );
+      window.AgoraProctorUtilEvents.on(
+        AgoraProctorUtils.FaceDetected,
+        facesDetected,
+      );
+    }
+  });
+
   const [teacher, students] = useChannelInfo();
   const history = useHistory();
   // const {phrase} = useParams();

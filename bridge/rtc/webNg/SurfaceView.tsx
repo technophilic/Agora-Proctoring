@@ -49,7 +49,11 @@ const SurfaceView = (props: SurfaceViewInterface) => {
   // console.log(props, window.engine, stream);
 
   useEffect(() => {
-    if (hasJoinedChannel && role === Role.Student) {
+    if (
+      hasJoinedChannel &&
+      role === Role.Student &&
+      window?.AgoraProctorUtils
+    ) {
       console.log('!!!!agora');
       console.log('!!!!agora', window.AgoraProctorUtils.faceDetect);
       // setInterval(() => {
@@ -84,18 +88,30 @@ const SurfaceView = (props: SurfaceViewInterface) => {
       <div
         id={String(props.uid)}
         className={'video-container'}
-        style={{...style.full, ...(props.style as Object), overflow: 'hidden'}}
+        style={{
+          ...style.full,
+          ...(props.style as Object),
+          overflow: 'hidden',
+          display:
+            props.uid === 0 && hasJoinedChannel && role !== Role.Teacher
+              ? 'none'
+              : 'block',
+      }}
       />
       <canvas
         id={props.uid === 0 ? "canvas" : ''}
         style={{
-          position: 'absolute',
-          zIndex: 100,
+          // position: 'absolute',
+          zIndex: -1,
+          borderRadius: 15,
           flex: 1,
-          display: props.uid === 0 ? 'block' : 'none',
+          display:
+            props.uid === 0 && hasJoinedChannel && role !== Role.Teacher
+              ? 'block'
+              : 'none',
         }}
-        width="240"
-        height="180"
+        width="848"
+        height="480"
       />
     </>
   ) : (
