@@ -144,7 +144,7 @@ const Controls = (props: any) => {
           <></>
         )}
         {isHost ? (
-          $config.CLOUD_RECORDING ? (
+          $config.CLOUD_RECORDING && role === Role.Teacher ? (
             <View style={{alignSelf: 'center'}}>
               <Recording
                 recordingActive={recordingActive}
