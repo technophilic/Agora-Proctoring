@@ -51,11 +51,11 @@ const RtmConfigure = (props: any) => {
   useEffect(() => {
     function processEvent(evt: string) {
       console.log('BrowserChangeAlert  ', evt);
-      sendMessage('BrowserChangeAlert:' + evt);
+      sendMessage(name + ' - BrowserChangeAlert: ' + evt);
     }
     function facesDetected(evt: string) {
       console.log('Faces Detected count=' + evt);
-      sendMessage('Faces Detected count=' + evt);
+      sendMessage(name + ' - Faces Detected count= ' + evt);
     }
     if (window?.AgoraProctorUtils) {
       window.AgoraProctorUtils.init();

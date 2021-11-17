@@ -30,11 +30,14 @@ import {navHolder} from '../../theme.json';
 import Layout from '../subComponents/LayoutEnum';
 import ChatContext from '../components/ChatContext';
 import mobileAndTabletCheck from '../utils/mobileWebTest';
+import {Role} from '../../bridge/rtc/webNg/Types';
+import {useRole} from '../../src/pages/VideoCall';
 
 const {participantIcon, gridLayoutIcon, pinnedLayoutIcon, recordingIcon} =
   icons;
 
 const Navbar = (props: any) => {
+  const role = useRole();
   const {primaryColor} = useContext(ColorContext);
   const {messageStore} = useContext(ChatContext);
   const {
@@ -137,7 +140,7 @@ const Navbar = (props: any) => {
               </MinUidConsumer> */}
             </TouchableOpacity>
           </View>
-          {$config.CHAT ? (
+          {$config.CHAT && role === Role.Teacher? (
             <>
               {Platform.OS === 'web' && isDesktop ? (
                 <View

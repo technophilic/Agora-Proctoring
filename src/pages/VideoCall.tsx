@@ -320,7 +320,7 @@ const VideoCall: React.FC = () => {
                                   <></>
                                 )}
                                 {sidePanel === SidePanelType.Chat ? (
-                                  $config.CHAT ? (
+                                  $config.CHAT & role === Role.Teacher ? (
                                     <Chat
                                       privateMessageCountMap={
                                         privateMessageCountMap
