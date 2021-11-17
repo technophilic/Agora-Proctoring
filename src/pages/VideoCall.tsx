@@ -208,11 +208,13 @@ const VideoCall: React.FC = () => {
   // const {store} = useContext(StorageContext);
   const [username, setUsername] = useState('');
   const [callActive, setCallActive] = useState($config.PRECALL ? false : true);
-  const [layout, sl] = useState(Layout.Pinned);
   const [recordingActive, setRecordingActive] = useState(false);
   const [queryComplete, setQueryComplete] = useState(true);
   const [sidePanel, setSidePanel] = useState<SidePanelType>(SidePanelType.None);
   const role = useRole();
+  const [layout, sl] = useState(
+    role === Role.Student ? Layout.Pinned : Layout.Grid,
+  );
   const setLayout = (param) => {
     if (role === Role.Teacher) {
       sl(param);
