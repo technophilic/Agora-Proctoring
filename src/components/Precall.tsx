@@ -50,7 +50,14 @@ function base64DecToArr(sBase64, nBlocksSize) {
 }
 
 import React, {useState, useContext} from 'react';
-import {View, Text, StyleSheet, Dimensions, Platform} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Platform,
+  Picker,
+} from 'react-native';
 import TextInput from '../atoms/TextInput';
 import PrimaryButton from '../atoms/PrimaryButton';
 import {MaxUidConsumer} from '../../agora-rn-uikit/src/MaxUidContext';
@@ -64,12 +71,11 @@ import ColorContext from './ColorContext';
 // import {useHistory} from './Router';
 // import {precallCard} from '../../theme.json';
 import Error from '../subComponents/Error';
-import {useRole} from '../../src/pages/VideoCall';
+import {useRole} from '../pages/VideoCall';
 import {Role} from '../../bridge/rtc/webNg/Types';
 
 const Precall = (props: any) => {
   const {primaryColor} = useContext(ColorContext);
-  const role = useRole();
   const [snapped, setSnapped] = useState(false);
   const {setCallActive, queryComplete, username, setUsername, error} = props;
   const [dim, setDim] = useState([
@@ -80,6 +86,7 @@ const Precall = (props: any) => {
   let onLayout = (e: any) => {
     setDim([e.nativeEvent.layout.width, e.nativeEvent.layout.height]);
   };
+  const role = useRole();
   async function snap(video, preview) {
     var ctx = preview.getContext('2d');
     //ctx.canvas.width = 640;
@@ -157,6 +164,13 @@ const Precall = (props: any) => {
           </View>
           {/* {dim[0] < dim[1] + 150 ? (
             <View style={[style.margin5Btm, {alignItems: 'center'}]}>
+              <Picker
+                selectedValue={username.split('-')[1]}
+                style={[{borderColor: primaryColor}, style.popupPicker]}
+                onValueChange={(itemValue) => setUsername(itemValue)}>
+                <Picker.Item label={'Primary'} value={'Primary'} />
+                <Picker.Item label={'Secondary'} value={'Secondary'} />
+              </Picker>
               <TextInput
                 value={username}
                 onChangeText={(text) => {
@@ -191,7 +205,7 @@ const Precall = (props: any) => {
             borderWidth: 1,
             borderStyle: 'solid',
             borderColor: $config.PRIMARY_COLOR,
-            height: role === Role.Teacher ? '70%' : '90%',
+            height: '90%',
             minHeight: 340,
             minWidth: 380,
             alignSelf: 'center',
@@ -238,16 +252,6 @@ const Precall = (props: any) => {
                 alignItems: 'center',
                 marginTop: 50,
               }}>
-              <TextInput
-                value={username}
-                onChangeText={(text) => {
-                  if (username !== 'Getting name...') {
-                    setUsername(text);
-                  }
-                }}
-                onSubmitEditing={() => {}}
-                placeholder="Device Name"
-              />
               {role === Role.Student && (
                 <>
                   <View style={{marginBottom: 20}} />
@@ -266,6 +270,14 @@ const Precall = (props: any) => {
                   <View style={{height: 20}} />
                 </>
               )}
+              <Picker
+                selectedValue={username.split('-')[1]}
+                style={[{borderColor: primaryColor}, style.popupPicker]}
+                onValueChange={(itemValue) => setUsername(itemValue)}>
+                <Picker.Item label={'Primary'} value={'Primary'} />
+                <Picker.Item label={'Secondary'} value={'Secondary'} />
+              </Picker>
+              <View style={{height: 20}} />
               <PrimaryButton
                 onPress={() => setCallActive(true)}
                 disabled={!snapped && role === Role.Student}
@@ -298,6 +310,14 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  popupPicker: {
+    height: 30,
+    marginBottom: 10,
+    borderRadius: 50,
+    paddingHorizontal: 15,
+    fontSize: 15,
+    minHeight: 35,
   },
   content: {flex: 6, flexDirection: 'row'},
   leftContent: {

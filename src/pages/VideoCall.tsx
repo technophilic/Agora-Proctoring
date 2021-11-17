@@ -206,12 +206,15 @@ export function useChannelInfo() {
 }
 const VideoCall: React.FC = () => {
   // const {store} = useContext(StorageContext);
-  const [username, setUsername] = useState('');
+  const [teacher, students] = useChannelInfo();
+  const role = useRole();
+  const [username, setUsername] = useState(
+    role === Role.Teacher ? teacher : `${students[0]}-Primary`,
+  );
   const [callActive, setCallActive] = useState($config.PRECALL ? false : true);
   const [recordingActive, setRecordingActive] = useState(false);
   const [queryComplete, setQueryComplete] = useState(true);
   const [sidePanel, setSidePanel] = useState<SidePanelType>(SidePanelType.None);
-  const role = useRole();
   const [layout, sl] = useState(
     role === Role.Student ? Layout.Pinned : Layout.Grid,
   );
@@ -221,7 +224,6 @@ const VideoCall: React.FC = () => {
     }
   };
 
-  const [teacher, students] = useChannelInfo();
   const history = useHistory();
   // const {phrase} = useParams();
 
@@ -390,7 +392,13 @@ const VideoCall: React.FC = () => {
                       <Precall
                         error={errorMessage}
                         username={username}
-                        setUsername={setUsername}
+                        setUsername={(name: string) => {
+                          if (role === Role.Student) {
+                            setUsername(`${students[0]}-${name}`);
+                          } else {
+                            setUsername(name);
+                          }
+                        }}
                         setCallActive={setCallActive}
                         queryComplete={queryComplete}
                       />
